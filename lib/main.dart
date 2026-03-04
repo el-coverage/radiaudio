@@ -36,6 +36,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   bool isPlaying = false;
   double playbackSpeed = 1.0;
+  double defaultPlaybackSpeed = 1.0;
+  String defaultMusicFolderPath = "";
 
   final Random _random = Random();
 
@@ -46,11 +48,118 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
   }
 
+  /// チャプター移動 (前:forward=false, 次:forward=true)
+  void skipChapter(bool forward) {
+    setState(() {
+      if (forward) {
+        if (currentIndex < totalCount) currentIndex++;
+      } else {
+        if (currentIndex > 1) currentIndex--;
+      }
+      // reset position for demo purposes
+      currentPositionSec = 0;
+    });
+    final text = forward ? '次チャプター' : '前チャプター';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  /// 曲移動 (長押し時に呼ばれる、前/次)
+  void skipTrack(bool forward) {
+    setState(() {
+      // 本来はプレイリストやファイルリストを管理する
+      if (forward) {
+        if (currentIndex < totalCount) currentIndex++;
+      } else {
+        if (currentIndex > 1) currentIndex--;
+      }
+      currentPositionSec = 0;
+    });
+    final text = forward ? '次曲' : '前曲';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(text)));
+  }
+
   void decreaseSpeed() {
     setState(() {
       playbackSpeed -= 0.25;
       if (playbackSpeed < 0.25) playbackSpeed = 3.0;
     });
+  }
+
+  void showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double tempDefaultSpeed = defaultPlaybackSpeed;
+        String tempFolderPath = defaultMusicFolderPath;
+
+        return StatefulBuilder(
+          builder: (context, dialogSetState) {
+            return AlertDialog(
+              title: const Text("設定"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      title: const Text("デフォルト音楽ファイルパス"),
+                      subtitle: Text(
+                        tempFolderPath.isEmpty ? "未選択" : tempFolderPath,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.folder_open),
+                        onPressed: () {
+                          // TODO: file_selectorを使ってフォルダ選択
+                          dialogSetState(() {
+                            tempFolderPath = "/path/to/music"; // サンプル
+                          });
+                        },
+                      ),
+                    ),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("デフォルト再生速度"),
+                        Text("${tempDefaultSpeed.toStringAsFixed(2)}x"),
+                      ],
+                    ),
+                    Slider(
+                      min: 0.25,
+                      max: 3.0,
+                      divisions: 11,
+                      value: tempDefaultSpeed,
+                      onChanged: (v) {
+                        dialogSetState(() => tempDefaultSpeed = v);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("キャンセル"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      defaultPlaybackSpeed = tempDefaultSpeed;
+                      defaultMusicFolderPath = tempFolderPath;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("保存"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   String formatTime(double sec) {
@@ -64,8 +173,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 60),
+          child: Column(
+            children: [
 
             // ===== タイトル + 設定 =====
             Padding(
@@ -90,7 +201,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   // 設定ボタン
                   IconButton(
                     iconSize: 32,
-                    onPressed: () {},
+                    onPressed: showSettingsDialog,
                     icon: const Icon(Icons.settings),
                   )
                 ],
@@ -149,14 +260,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
             // ===== 再生ボタン群 =====
             SizedBox(
-              height: 90,
+              height: 70,
               child: Row(
                 children: [
                   Expanded(
                     flex: 25,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: const Icon(Icons.skip_previous, size: 40),
+                    child: Tooltip(
+                      message: '前チャプター\n(長押しで前曲)',
+                      child: ElevatedButton(
+                        onPressed: () => skipChapter(false),
+                        onLongPress: () => skipTrack(false),
+                        style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
+                        child: const Icon(Icons.skip_previous, size: 40),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -167,6 +283,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           isPlaying = !isPlaying;
                         });
                       },
+                      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, backgroundColor: Colors.yellow.shade600),
                       child: Icon(
                         isPlaying
                             ? Icons.pause
@@ -177,30 +294,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                   Expanded(
                     flex: 25,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: const Icon(Icons.skip_next, size: 40),
+                    child: Tooltip(
+                      message: '次チャプター\n(長押しで次曲)',
+                      child: ElevatedButton(
+                        onPressed: () => skipChapter(true),
+                        onLongPress: () => skipTrack(true),
+                        style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
+                        child: const Icon(Icons.skip_next, size: 40),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 8),
-
             // ===== 速度 + 開く =====
             SizedBox(
-              height: 80,
+              height: 60,
               child: Row(
                 children: [
                   Expanded(
                     flex: 50,
-                    child: GestureDetector(
-                      onTap: increaseSpeed,
-                      onLongPress: decreaseSpeed,
-                      child: Container(
-                        alignment: Alignment.center,
-                        color: Colors.orange.shade200,
+                    child: Tooltip(
+                      message: '+0.25x (長押しで-0.25x)',
+                      child: ElevatedButton(
+                        onPressed: increaseSpeed,
+                        onLongPress: decreaseSpeed,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size.fromHeight(60),
+                        ),
                         child: Text(
                           "${playbackSpeed.toStringAsFixed(2)}x",
                           style: const TextStyle(
@@ -215,17 +338,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     flex: 50,
                     child: ElevatedButton(
                       onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size.fromHeight(60),
+                      ),
                       child: const Icon(Icons.folder_open, size: 40),
                     ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 16),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
