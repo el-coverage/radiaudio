@@ -46,6 +46,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
       playbackSpeed += 0.25;
       if (playbackSpeed > 3.0) playbackSpeed = 0.25;
     });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(
+          content: Text('${playbackSpeed.toStringAsFixed(2)}x'),
+          duration: const Duration(seconds: 1),
+        ));
   }
 
   /// チャプター移動 (前:forward=false, 次:forward=true)
@@ -61,7 +66,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     final text = forward ? '次チャプター' : '前チャプター';
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(text)));
+        .showSnackBar(SnackBar(
+          content: Text(text),
+          duration: const Duration(seconds: 1),
+        ));
   }
 
   /// 曲移動 (長押し時に呼ばれる、前/次)
@@ -77,7 +85,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     final text = forward ? '次曲' : '前曲';
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(text)));
+        .showSnackBar(SnackBar(
+          content: Text(text),
+          duration: const Duration(seconds: 1),
+        ));
   }
 
   void decreaseSpeed() {
@@ -85,6 +96,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
       playbackSpeed -= 0.25;
       if (playbackSpeed < 0.25) playbackSpeed = 3.0;
     });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(
+          content: Text('${playbackSpeed.toStringAsFixed(2)}x'),
+          duration: const Duration(seconds: 1),
+        ));
   }
 
   void showSettingsDialog() {
