@@ -1,0 +1,51 @@
+# アプリ名（フォルダ名と一致させるのが無難）
+name: radio_player_simple
+
+# アプリの説明（ストア公開しないなら自由でOK）
+description: Radio optimized simple audio player (Phase 1 mock)
+
+# pub.dev に公開しない設定
+publish_to: 'none'
+
+# バージョン
+# 1.0.0 → ユーザー向けバージョン
+# +1    → ビルド番号（Android / iOS 用）
+version: 1.0.0+1
+
+# Dart SDK のバージョン制約
+# Flutter 3.16 以降ならこの範囲でOK
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  # Flutter本体
+  flutter:
+    sdk: flutter
+
+  # iOS風アイコン（使わなくても害なし）
+  cupertino_icons: ^1.0.6
+
+  # 🎵 音声再生ライブラリ
+  # ・倍速再生対応
+  # ・ピッチ保持対応
+  # ・Android / iOS / Windows 対応
+  # ・ローカルファイル再生可能
+  just_audio: ^0.9.36
+
+  # 📂 ファイル・フォルダ選択ダイアログ
+  # 各OSネイティブUIを呼び出す
+  # Android / iOS / Windows 対応
+  file_selector: ^1.0.1
+
+dev_dependencies:
+  # テスト用（今回は特に使わないが残してOK）
+  flutter_test:
+    sdk: flutter
+
+  # コード警告ルール
+  # Pythonでいうflake8、JavaでいうCheckstyle的なもの
+  flutter_lints: ^3.0.0
+
+flutter:
+  # Materialアイコンを有効化
+  uses-material-design: true
