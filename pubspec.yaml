@@ -22,6 +22,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # 🌐 日本語ローカライズサポート
+  flutter_localizations:
+    sdk: flutter
+
   # iOS風アイコン（使わなくても害なし）
   cupertino_icons: ^1.0.6
 
