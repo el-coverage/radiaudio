@@ -63,6 +63,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const String _prefDefaultMusicFolderPath = 'default_music_folder_path';
   static const String _prefDefaultPlaybackSpeed = 'default_playback_speed';
   static const String _prefChapterUnitSec = 'chapter_unit_sec';
+  static const String _prefSilenceSeparateMinSec = 'silence_separate_min_sec';
   static const String _prefLanguageCode = 'language_code';
   static const String _prefIsPremiumUser = 'is_premium_user';
   static const String _prefAdsDisabledUntilIso = 'ads_disabled_until_iso';
@@ -70,7 +71,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const String _prefLastInterstitialAtIso = 'last_interstitial_at_iso';
   static const double _minChapterUnitSec = 0.3;
   static const double _maxChapterUnitSec = 2.0;
-  static const double _silenceNoiseDb = -35.0;
+  static const double _silenceNoiseDb = -70.0;
+  static const double _minSilenceSeparateMinSec = 0.1;
+  static const double _maxSilenceSeparateMinSec = 3.0;
+  static const double _fixedMinSegmentSecForSilenceSplit = 8.0;
+  static const double _fixedMaxSegmentSecWithoutSplit = 24.0;
+  static const double _hardMinChapterSec = 8.0;
+  static const double _silenceDetectWindowSec = 0.01;
+  double silenceSeparateMinSec = 1.0;
   static const int _minVolumeLevel = 0;
   static const int _maxVolumeLevel = 20;
   static const int _interstitialEveryOpportunities = 6;
@@ -173,6 +181,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   @override
+
   /// ストリーム購読を初期化し、再生位置・再生状態をUIへ反映する。
   void initState() {
     super.initState();
@@ -205,9 +214,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final loadedLanguageCode = prefs.getString(_prefLanguageCode) ?? 'ja';
-    final normalizedLanguageCode = supportedLanguageCodes.contains(loadedLanguageCode)
-      ? loadedLanguageCode
-      : 'ja';
+    final normalizedLanguageCode =
+        supportedLanguageCodes.contains(loadedLanguageCode)
+            ? loadedLanguageCode
+            : 'ja';
     final loadedDefaultSpeed =
         prefs.getDouble(_prefDefaultPlaybackSpeed) ?? defaultPlaybackSpeed;
     final normalizedDefaultSpeed = loadedDefaultSpeed.clamp(0.25, 3.0);
@@ -217,13 +227,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _minChapterUnitSec,
       _maxChapterUnitSec,
     );
+    final loadedSilenceSeparateMinSec =
+        prefs.getDouble(_prefSilenceSeparateMinSec) ?? silenceSeparateMinSec;
+    final normalizedSilenceSeparateMinSec = loadedSilenceSeparateMinSec.clamp(
+      _minSilenceSeparateMinSec,
+      _maxSilenceSeparateMinSec,
+    );
     final loadedPremium = prefs.getBool(_prefIsPremiumUser) ?? false;
     final loadedAdsDisabledUntilIso = prefs.getString(_prefAdsDisabledUntilIso);
     final loadedAdsDisabledUntil = loadedAdsDisabledUntilIso == null
         ? null
         : DateTime.tryParse(loadedAdsDisabledUntilIso);
-    final loadedAdOpportunityCount =
-        prefs.getInt(_prefAdOpportunityCount) ?? 0;
+    final loadedAdOpportunityCount = prefs.getInt(_prefAdOpportunityCount) ?? 0;
     final loadedLastInterstitialAtIso =
         prefs.getString(_prefLastInterstitialAtIso);
     final loadedLastInterstitialAt = loadedLastInterstitialAtIso == null
@@ -231,10 +246,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
         : DateTime.tryParse(loadedLastInterstitialAtIso);
     if (!mounted) return;
     setState(() {
-      defaultMusicFolderPath = prefs.getString(_prefDefaultMusicFolderPath) ?? "";
+      defaultMusicFolderPath =
+          prefs.getString(_prefDefaultMusicFolderPath) ?? "";
       defaultPlaybackSpeed = normalizedDefaultSpeed;
       playbackSpeed = normalizedDefaultSpeed;
       chapterUnitSec = normalizedChapterUnitSec;
+      silenceSeparateMinSec = normalizedSilenceSeparateMinSec;
       selectedLanguageCode = normalizedLanguageCode;
       _isPremiumUser = loadedPremium;
       _adsDisabledUntil = loadedAdsDisabledUntil;
@@ -250,12 +267,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
     required String path,
     required double defaultSpeed,
     required double chapterSeconds,
+    required double silenceMinSec,
     required String languageCode,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefDefaultMusicFolderPath, path);
     await prefs.setDouble(_prefDefaultPlaybackSpeed, defaultSpeed);
     await prefs.setDouble(_prefChapterUnitSec, chapterSeconds);
+    await prefs.setDouble(_prefSilenceSeparateMinSec, silenceMinSec);
     await prefs.setString(_prefLanguageCode, languageCode);
   }
 
@@ -271,9 +290,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     await prefs.setBool(_prefIsPremiumUser, premium);
     if (premium) {
       await prefs.remove(_prefAdsDisabledUntilIso);
-      showQuickSnack('Premium enabled. Ads are now disabled.', milliseconds: 1200);
+      showQuickSnack('Premium enabled. Ads are now disabled.',
+          milliseconds: 1200);
     } else {
-      showQuickSnack('Premium disabled. Ads may appear again.', milliseconds: 1200);
+      showQuickSnack('Premium disabled. Ads may appear again.',
+          milliseconds: 1200);
     }
   }
 
@@ -286,7 +307,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _adsDisabledUntil = until;
     });
     await prefs.setString(_prefAdsDisabledUntilIso, until.toIso8601String());
-    showQuickSnack('Reward unlocked: ads off for 24 hours.', milliseconds: 1200);
+    showQuickSnack('Reward unlocked: ads off for 24 hours.',
+        milliseconds: 1200);
   }
 
   Future<void> _registerAdOpportunity({required String source}) async {
@@ -473,8 +495,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     _syncSilenceTriggerIndexWithPosition(targetSec);
     final chapterMessage = forward
-      ? _tr('nextChapter')
-      : (backwardSteps >= 2 ? _tr('prevPrevChapter') : _tr('prevChapter'));
+        ? _tr('nextChapter')
+        : (backwardSteps >= 2 ? _tr('prevPrevChapter') : _tr('prevChapter'));
     showQuickSnack(chapterMessage);
   }
 
@@ -484,9 +506,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     var message = forward ? _tr('nextTrack') : _tr('prevTrack');
     setState(() {
       if (folderAudioFiles.isNotEmpty && currentFilePath != null) {
-        final currentPathLower = currentFilePath!.toLowerCase();
+        final currentPathLower = normalizedPathKey(currentFilePath!);
         final currentPos = folderAudioFiles.indexWhere(
-          (path) => path.toLowerCase() == currentPathLower,
+          (path) => normalizedPathKey(path) == currentPathLower,
         );
         if (currentPos >= 0) {
           if (forward && currentPos >= folderAudioFiles.length - 1) {
@@ -517,7 +539,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     if (moved) {
       await loadCurrentFile(resetPlayState: true, autoPlay: true);
-          unawaited(_registerAdOpportunity(source: 'skip_track'));
+      unawaited(_registerAdOpportunity(source: 'skip_track'));
     }
     showQuickSnack(message);
   }
@@ -548,6 +570,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   @override
+
   /// 保持しているリソースを解放する。
   void dispose() {
     _statusMessage.dispose();
@@ -584,7 +607,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
 
     final silenceStarts = <double>[];
+    final silenceEnds = <double>[];
+    final silenceDurations = <double>[];
     final startPattern = RegExp(r'silence_start:\s*([0-9]+(?:\.[0-9]+)?)');
+    final endPattern = RegExp(
+      r'silence_end:\s*([0-9]+(?:\.[0-9]+)?)\s*\|\s*silence_duration:\s*([0-9]+(?:\.[0-9]+)?)',
+    );
 
     try {
       String output = '';
@@ -607,7 +635,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           '-i',
           audioPath,
           '-af',
-          'silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(0)}dB:d=$chapterUnitSec',
+          'silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(1)}dB:d=$_silenceDetectWindowSec',
           '-f',
           'null',
           '-',
@@ -615,7 +643,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         output = '${result.stderr}\n${result.stdout}';
       } else {
         final command =
-            '-hide_banner -i "$audioPath" -af "silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(0)}dB:d=$chapterUnitSec" -f null -';
+          '-hide_banner -i "$audioPath" -af "silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(1)}dB:d=$_silenceDetectWindowSec" -f null -';
         final session = await FFmpegKit.execute(command);
         output = (await session.getAllLogsAsString()) ??
             (await session.getOutput()) ??
@@ -638,7 +666,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
         final raw = match.group(1);
         final startSec = double.tryParse(raw ?? '');
         if (startSec == null) continue;
-        silenceStarts.add(startSec + chapterUnitSec);
+        silenceStarts.add(startSec);
+      }
+
+      for (final match in endPattern.allMatches(output)) {
+        final endRaw = match.group(1);
+        final durationRaw = match.group(2);
+        final endSec = double.tryParse(endRaw ?? '');
+        final durationSec = double.tryParse(durationRaw ?? '');
+        if (endSec == null || durationSec == null) continue;
+        silenceEnds.add(endSec);
+        silenceDurations.add(durationSec);
       }
     } catch (_) {
       if (!mounted) return;
@@ -655,11 +693,34 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     if (!mounted) return;
     if (_silenceAnalysisPath != audioPath) return;
-    silenceStarts.sort();
+    final splitTriggers = <double>[];
+    var termStartSec = 0.0;
+    final intervalCount = math.min(
+      silenceStarts.length,
+      math.min(silenceEnds.length, silenceDurations.length),
+    );
+
+    for (var i = 0; i < intervalCount; i++) {
+      final silenceStartSec = silenceStarts[i];
+      final silenceEndSec = silenceEnds[i];
+      final silenceDurationSec = silenceDurations[i];
+      if (!silenceEndSec.isFinite || silenceEndSec <= 0) continue;
+      if (silenceEndSec <= silenceStartSec) continue;
+      final segmentLenSec = silenceEndSec - termStartSec;
+        if (segmentLenSec < _hardMinChapterSec) continue;
+      final shouldSplit = ((silenceDurationSec > silenceSeparateMinSec &&
+            segmentLenSec > _fixedMinSegmentSecForSilenceSplit) ||
+          segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
+      if (!shouldSplit) continue;
+      splitTriggers.add(silenceEndSec);
+      termStartSec = silenceEndSec;
+    }
+
+    splitTriggers.sort();
     setState(() {
       _isPreparingWindowsAnalyzer = false;
       _isAnalyzingSilence = false;
-      _silenceTriggersSec = silenceStarts;
+      _silenceTriggersSec = splitTriggers;
       _nextSilenceTriggerIndex = 0;
     });
     _syncSilenceTriggerIndexWithPosition(currentPositionSec);
@@ -851,9 +912,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final path = currentFilePath;
     if (path == null) return;
 
-    unawaited(_analyzeSilenceForAutoChapter(path));
-    unawaited(_analyzeWaveformForSeekbar(path));
-
     try {
       await _player.setFilePath(path);
       await _player.setSpeed(playbackSpeed);
@@ -870,6 +928,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
           isPlaying = true;
         }
       });
+      unawaited(_analyzeSilenceForAutoChapter(path));
+      unawaited(_analyzeWaveformForSeekbar(path));
     } catch (_) {
       if (!mounted) return;
       showQuickSnack(_tr('loadFailed'), milliseconds: 1000);
@@ -884,6 +944,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         String tempFolderPath = defaultMusicFolderPath;
         double tempDefaultSpeed = defaultPlaybackSpeed;
         double tempChapterUnitSec = chapterUnitSec;
+        double tempSilenceSeparateMinSec = silenceSeparateMinSec;
         String tempLanguageCode = selectedLanguageCode;
         bool tempPremium = _isPremiumUser;
         DateTime? tempAdsDisabledUntil = _adsDisabledUntil;
@@ -945,9 +1006,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             return;
                           }
                           final selectedPath = await getDirectoryPath(
-                            initialDirectory: tempFolderPath.isEmpty
-                                ? null
-                                : tempFolderPath,
+                            initialDirectory:
+                                tempFolderPath.isEmpty ? null : tempFolderPath,
                             confirmButtonText: _tr('useThisFolder'),
                           );
                           if (selectedPath == null || selectedPath.isEmpty) {
@@ -998,6 +1058,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         dialogSetState(() => tempChapterUnitSec = v);
                       },
                     ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('分割に必要な最小無音秒'),
+                        Text(
+                            '${tempSilenceSeparateMinSec.toStringAsFixed(2)}s'),
+                      ],
+                    ),
+                    Slider(
+                      min: _minSilenceSeparateMinSec,
+                      max: _maxSilenceSeparateMinSec,
+                      divisions: ((_maxSilenceSeparateMinSec -
+                                  _minSilenceSeparateMinSec) *
+                              20)
+                          .toInt(),
+                      value: tempSilenceSeparateMinSec,
+                      onChanged: (v) {
+                        dialogSetState(() => tempSilenceSeparateMinSec = v);
+                      },
+                    ),
                     const Divider(),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -1020,7 +1100,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   DateTime.now().isBefore(tempAdsDisabledUntil!)
                               ? 'Ad-free until: ${tempAdsDisabledUntil!.toLocal()}'
                               : 'Ad-free reward not active',
-                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
                         ),
                       ),
                     if (!tempPremium)
@@ -1034,7 +1115,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             });
                           },
                           icon: const Icon(Icons.ondemand_video),
-                          label: const Text('Watch reward ad (simulate) -> 24h no ads'),
+                          label: const Text(
+                              'Watch reward ad (simulate) -> 24h no ads'),
                         ),
                       ),
                   ],
@@ -1048,13 +1130,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     final shouldReanalyzeSilence =
-                        (chapterUnitSec - tempChapterUnitSec).abs() > 0.0001;
+                        (chapterUnitSec - tempChapterUnitSec).abs() > 0.0001 ||
+                            (silenceSeparateMinSec - tempSilenceSeparateMinSec)
+                            .abs() >
+                          0.0001;
                     final currentPath = currentFilePath;
                     setState(() {
                       defaultMusicFolderPath = tempFolderPath;
                       defaultPlaybackSpeed = tempDefaultSpeed;
                       playbackSpeed = tempDefaultSpeed;
                       chapterUnitSec = tempChapterUnitSec;
+                      silenceSeparateMinSec = tempSilenceSeparateMinSec;
                       selectedLanguageCode = tempLanguageCode;
                     });
                     await _player.setSpeed(tempDefaultSpeed);
@@ -1062,6 +1148,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       path: tempFolderPath,
                       defaultSpeed: tempDefaultSpeed,
                       chapterSeconds: tempChapterUnitSec,
+                      silenceMinSec: tempSilenceSeparateMinSec,
                       languageCode: tempLanguageCode,
                     );
                     Navigator.pop(context);
@@ -1093,6 +1180,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final splitIndex = normalized.lastIndexOf('/');
     if (splitIndex <= 0) return null;
     return normalized.substring(0, splitIndex);
+  }
+
+  /// 比較用にパス文字列を正規化する。
+  String normalizedPathKey(String path) {
+    return path.replaceAll('\\', '/').toLowerCase();
   }
 
   /// 拡張子が対応音声フォーマットかどうかを判定する。
@@ -1144,9 +1236,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       extensions: ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'opus'],
     );
 
-    final initialDirectory = defaultMusicFolderPath.isEmpty
-        ? null
-        : defaultMusicFolderPath;
+    final initialDirectory =
+        defaultMusicFolderPath.isEmpty ? null : defaultMusicFolderPath;
     final file = await openFile(
       acceptedTypeGroups: [audioTypeGroup],
       initialDirectory: initialDirectory,
@@ -1154,9 +1245,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (file == null) return;
 
     final files = await loadAudioFilesInSameFolder(file.path);
-    final selectedPathLower = file.path.toLowerCase();
+    final selectedPathLower = normalizedPathKey(file.path);
     final selectedIndex = files.indexWhere(
-      (path) => path.toLowerCase() == selectedPathLower,
+      (path) => normalizedPathKey(path) == selectedPathLower,
     );
     final resolvedIndex = selectedIndex >= 0 ? selectedIndex : 0;
     final resolvedPath = files[resolvedIndex];
@@ -1282,6 +1373,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   @override
+
   /// プレイヤー画面全体のUIを構築する。
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1291,423 +1383,438 @@ class _PlayerScreenState extends State<PlayerScreen> {
           padding: const EdgeInsets.only(bottom: 60),
           child: Column(
             children: [
-
-            // ===== タイトル + 設定 =====
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 10, 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // タイトル（3行固定）
-                  Expanded(
-                    child: Text(
-                      currentTitle,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
+              // ===== タイトル + 設定 =====
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 10, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // タイトル（3行固定）
+                    Expanded(
+                      child: Text(
+                        currentTitle,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
+                        ),
                       ),
                     ),
-                  ),
 
-                  // 設定ボタン
-                  IconButton(
-                    iconSize: 32,
-                    onPressed: showSettingsDialog,
-                    icon: const Icon(Icons.settings),
-                  )
-                ],
+                    // 設定ボタン
+                    IconButton(
+                      iconSize: 32,
+                      onPressed: showSettingsDialog,
+                      icon: const Icon(Icons.settings),
+                    )
+                  ],
+                ),
               ),
-            ),
 
-            // ===== シークバー領域 =====
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const double labelColumnWidth = 52;
-                    const double targetRowHeight = 44;
-                    final dynamicRows =
-                        (constraints.maxHeight / targetRowHeight).floor();
-                    final rows = dynamicRows.clamp(3, 12).toInt();
-                    final barsAreaWidth =
-                        (constraints.maxWidth - labelColumnWidth - 8)
-                            .clamp(60.0, double.infinity);
-                    final dynamicBarsPerRow = (barsAreaWidth / 6).floor();
-                    final barsPerRow = dynamicBarsPerRow.clamp(8, 300).toInt();
-                    final hasWaveform =
-                      currentFilePath != null && _waveformLevels.isNotEmpty;
-                    final rowSpanSec =
-                      totalDurationSec > 0 ? totalDurationSec / rows : 0.0;
-                    final effectiveDurationSec =
-                        totalDurationSec > 0 ? totalDurationSec : rows * 30.0;
-                    final seekProgressSec = seekBarValue.clamp(
-                      0.0,
-                      effectiveDurationSec,
-                    );
-                    final totalBars = rows * barsPerRow;
-                    final secPerBar = effectiveDurationSec / totalBars;
-                    int chapterIndexForSec(double sec) {
-                      var chapterIndex = 0;
-                      for (final triggerSec in _silenceTriggersSec) {
-                        if (sec >= triggerSec) {
-                          chapterIndex++;
-                        } else {
-                          break;
+              // ===== シークバー領域 =====
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const double labelColumnWidth = 52;
+                      const double targetRowHeight = 44;
+                      final dynamicRows =
+                          (constraints.maxHeight / targetRowHeight).floor();
+                      final rows = dynamicRows.clamp(3, 12).toInt();
+                      final barsAreaWidth =
+                          (constraints.maxWidth - labelColumnWidth - 8)
+                              .clamp(60.0, double.infinity);
+                      final dynamicBarsPerRow = (barsAreaWidth / 6).floor();
+                      final barsPerRow =
+                          dynamicBarsPerRow.clamp(8, 300).toInt();
+                      final hasWaveform =
+                          currentFilePath != null && _waveformLevels.isNotEmpty;
+                      final rowSpanSec =
+                          totalDurationSec > 0 ? totalDurationSec / rows : 0.0;
+                      final effectiveDurationSec =
+                          totalDurationSec > 0 ? totalDurationSec : rows * 30.0;
+                      final seekProgressSec = seekBarValue.clamp(
+                        0.0,
+                        effectiveDurationSec,
+                      );
+                      final totalBars = rows * barsPerRow;
+                      final secPerBar = effectiveDurationSec / totalBars;
+                      int chapterIndexForSec(double sec) {
+                        var chapterIndex = 0;
+                        for (final triggerSec in _silenceTriggersSec) {
+                          if (sec >= triggerSec) {
+                            chapterIndex++;
+                          } else {
+                            break;
+                          }
                         }
+                        return chapterIndex;
                       }
-                      return chapterIndex;
-                    }
 
-                    return Row(
-                      children: [
-                        SizedBox(
-                          width: labelColumnWidth,
-                          child: Column(
-                            children: List.generate(rows, (row) {
-                              final rowStartSec = row * rowSpanSec;
-                              return Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    formatTimelineTime(rowStartSec),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black54,
+                      return Row(
+                        children: [
+                          SizedBox(
+                            width: labelColumnWidth,
+                            child: Column(
+                              children: List.generate(rows, (row) {
+                                final rowStartSec = row * rowSpanSec;
+                                return Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      formatTimelineTime(rowStartSec),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }),
+                                );
+                              }),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, barConstraints) {
-                              final barSize = Size(
-                                barConstraints.maxWidth,
-                                barConstraints.maxHeight,
-                              );
-                              return GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTapDown: (details) {
-                                  _previewSeekFromLocalPosition(
-                                    localPosition: details.localPosition,
-                                    size: barSize,
-                                    rows: rows,
-                                    durationSec: effectiveDurationSec,
-                                  );
-                                  _commitSeekPreview();
-                                },
-                                onPanStart: (details) {
-                                  _previewSeekFromLocalPosition(
-                                    localPosition: details.localPosition,
-                                    size: barSize,
-                                    rows: rows,
-                                    durationSec: effectiveDurationSec,
-                                  );
-                                },
-                                onPanUpdate: (details) {
-                                  _previewSeekFromLocalPosition(
-                                    localPosition: details.localPosition,
-                                    size: barSize,
-                                    rows: rows,
-                                    durationSec: effectiveDurationSec,
-                                  );
-                                },
-                                onPanEnd: (_) {
-                                  _commitSeekPreview();
-                                },
-                                onPanCancel: () {
-                                  setState(() {
-                                    isDraggingSeekBar = false;
-                                  });
-                                },
-                                child: Column(
-                                  children: List.generate(rows, (row) {
-                                    return Expanded(
-                                      child: Stack(
-                                        children: [
-                                          Row(
-                                            children: List.generate(barsPerRow, (i) {
-                                              final flatIndex = (row * barsPerRow) + i;
-                                              final waveformLevel =
-                                                  _waveformLevelForBar(
-                                                flatIndex,
-                                                totalBars,
-                                              );
-                                              final barSec =
-                                                  (flatIndex + 1) * secPerBar;
-                                              final double renderedHeight = hasWaveform
-                                                  ? (waveformLevel >= 0
-                                                      ? 4.0 + (waveformLevel * 41.0)
-                                                      : 0.0)
-                                                  : 0.0;
-                                              final isPlayed =
-                                                  barSec <= seekProgressSec;
-                                              final chapterIndex =
-                                                  chapterIndexForSec(barSec);
-
-                                              return Expanded(
-                                                child: Container(
-                                                  margin:
-                                                      const EdgeInsets.symmetric(
-                                                    horizontal: 1,
-                                                  ),
-                                                  alignment: Alignment.bottomCenter,
-                                                  child: Container(
-                                                    height: renderedHeight,
-                                                    color: _isAnalyzingSilence
-                                                        ? (isPlayed
-                                                            ? _chapterColorForIndex(
-                                                                chapterIndex,
-                                                                true,
-                                                              )
-                                                            : Colors.blueGrey
-                                                                .shade300)
-                                                        : _chapterColorForIndex(
-                                                            chapterIndex,
-                                                            isPlayed,
-                                                          ),
-                                                  ),
-                                                ),
-                                              );
-                                            }),
-                                          ),
-                                          if (!hasWaveform)
-                                            Positioned(
-                                              left: 0,
-                                              right: 0,
-                                              bottom: 0,
-                                              child: Container(
-                                                height: 2,
-                                                color: Colors.black26,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, barConstraints) {
+                                final barSize = Size(
+                                  barConstraints.maxWidth,
+                                  barConstraints.maxHeight,
+                                );
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTapDown: (details) {
+                                    _previewSeekFromLocalPosition(
+                                      localPosition: details.localPosition,
+                                      size: barSize,
+                                      rows: rows,
+                                      durationSec: effectiveDurationSec,
                                     );
-                                  }),
-                                ),
-                              );
-                            },
+                                    _commitSeekPreview();
+                                  },
+                                  onPanStart: (details) {
+                                    _previewSeekFromLocalPosition(
+                                      localPosition: details.localPosition,
+                                      size: barSize,
+                                      rows: rows,
+                                      durationSec: effectiveDurationSec,
+                                    );
+                                  },
+                                  onPanUpdate: (details) {
+                                    _previewSeekFromLocalPosition(
+                                      localPosition: details.localPosition,
+                                      size: barSize,
+                                      rows: rows,
+                                      durationSec: effectiveDurationSec,
+                                    );
+                                  },
+                                  onPanEnd: (_) {
+                                    _commitSeekPreview();
+                                  },
+                                  onPanCancel: () {
+                                    setState(() {
+                                      isDraggingSeekBar = false;
+                                    });
+                                  },
+                                  child: Column(
+                                    children: List.generate(rows, (row) {
+                                      return Expanded(
+                                        child: Stack(
+                                          children: [
+                                            Row(
+                                              children: List.generate(
+                                                  barsPerRow, (i) {
+                                                final flatIndex =
+                                                    (row * barsPerRow) + i;
+                                                final waveformLevel =
+                                                    _waveformLevelForBar(
+                                                  flatIndex,
+                                                  totalBars,
+                                                );
+                                                final barSec =
+                                                    (flatIndex + 1) * secPerBar;
+                                                final double renderedHeight =
+                                                    hasWaveform
+                                                        ? (waveformLevel >= 0
+                                                            ? 4.0 +
+                                                                (waveformLevel *
+                                                                    41.0)
+                                                            : 0.0)
+                                                        : 0.0;
+                                                final isPlayed =
+                                                    barSec <= seekProgressSec;
+                                                final chapterIndex =
+                                                    chapterIndexForSec(barSec);
+
+                                                return Expanded(
+                                                  child: Container(
+                                                    margin: const EdgeInsets
+                                                        .symmetric(
+                                                      horizontal: 1,
+                                                    ),
+                                                    alignment:
+                                                        Alignment.bottomCenter,
+                                                    child: Container(
+                                                      height: renderedHeight,
+                                                      color: _isAnalyzingSilence
+                                                          ? (isPlayed
+                                                              ? _chapterColorForIndex(
+                                                                  chapterIndex,
+                                                                  true,
+                                                                )
+                                                              : Colors.blueGrey
+                                                                  .shade300)
+                                                          : _chapterColorForIndex(
+                                                              chapterIndex,
+                                                              isPlayed,
+                                                            ),
+                                                    ),
+                                                  ),
+                                                );
+                                              }),
+                                            ),
+                                            if (!hasWaveform)
+                                              Positioned(
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                child: Container(
+                                                  height: 2,
+                                                  color: Colors.black26,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // ===== インデックス + 時間 =====
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 25,
+                      child: SizedBox(
+                        height: 60,
+                        child: Tooltip(
+                          message: _tr('volumeDown'),
+                          child: ElevatedButton(
+                            onPressed: decreaseVolume,
+                            style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero),
+                            child: const Icon(Icons.volume_down, size: 38),
                           ),
                         ),
-                      ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 50,
+                      child: Text(
+                        "$currentIndex/$totalCount    "
+                        "${formatTime(currentPositionSec)}/${formatTime(totalDurationSec)}    "
+                        "${_tr('volumeLabel', {'value': '$volumeLevel'})}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 25,
+                      child: SizedBox(
+                        height: 60,
+                        child: Tooltip(
+                          message: _tr('volumeUp'),
+                          child: ElevatedButton(
+                            onPressed: increaseVolume,
+                            style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero),
+                            child: const Icon(Icons.volume_up, size: 38),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(
+                height: 22,
+                child: ValueListenableBuilder<String>(
+                  valueListenable: _statusMessage,
+                  builder: (context, message, _) {
+                    if (currentFilePath == null) {
+                      return Text(
+                        _tr('pleaseSelectAudioFile'),
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.black54),
+                      );
+                    }
+                    final chapterCount = _silenceTriggersSec.isEmpty
+                        ? 1
+                        : _silenceTriggersSec.length + 1;
+                    final currentChapter = _silenceTriggersSec.isEmpty
+                        ? 1
+                        : (_silenceTriggersSec
+                                    .where((sec) => sec <= seekBarValue + 0.02)
+                                    .length +
+                                1)
+                            .clamp(1, chapterCount);
+                    final silenceInfo = _isPreparingWindowsAnalyzer
+                        ? _tr('silencePreparing')
+                        : (_isAnalyzingSilence
+                            ? _tr('silenceAnalyzing')
+                            : (_isAnalyzingWaveform
+                                ? _tr('waveformAnalyzing')
+                                : _tr(
+                                    'chapterStatus',
+                                    {
+                                      'current': '$currentChapter',
+                                      'total': '$chapterCount',
+                                    },
+                                  )));
+                    final displayMessage = message.isEmpty
+                        ? silenceInfo
+                        : '$silenceInfo  $message';
+                    return Text(
+                      displayMessage,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black54),
                     );
                   },
                 ),
               ),
-            ),
 
-            // ===== インデックス + 時間 =====
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 25,
-                    child: SizedBox(
-                      height: 60,
+              // ===== 再生ボタン群 =====
+              SizedBox(
+                height: 70,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 25,
                       child: Tooltip(
-                        message: _tr('volumeDown'),
+                        message: _tr('chapterPrevTooltip'),
                         child: ElevatedButton(
-                          onPressed: decreaseVolume,
-                          style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
-                          child: const Icon(Icons.volume_down, size: 38),
+                          onPressed: handlePreviousChapterTap,
+                          onLongPress: () => skipTrack(false),
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero),
+                          child: const Icon(Icons.skip_previous, size: 40),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 50,
-                    child: Text(
-                      "$currentIndex/$totalCount    "
-                      "${formatTime(currentPositionSec)}/${formatTime(totalDurationSec)}    "
-                      "${_tr('volumeLabel', {'value': '$volumeLevel'})}",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 25,
-                    child: SizedBox(
-                      height: 60,
+                    Expanded(
+                      flex: 50,
                       child: Tooltip(
-                        message: _tr('volumeUp'),
+                        message: _tr('playTooltip'),
                         child: ElevatedButton(
-                          onPressed: increaseVolume,
-                          style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
-                          child: const Icon(Icons.volume_up, size: 38),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(
-              height: 22,
-              child: ValueListenableBuilder<String>(
-                valueListenable: _statusMessage,
-                builder: (context, message, _) {
-                  if (currentFilePath == null) {
-                    return Text(
-                      _tr('pleaseSelectAudioFile'),
-                      style: const TextStyle(fontSize: 16, color: Colors.black54),
-                    );
-                  }
-                  final chapterCount = _silenceTriggersSec.isEmpty
-                      ? 1
-                      : _silenceTriggersSec.length + 1;
-                  final currentChapter = _silenceTriggersSec.isEmpty
-                      ? 1
-                      : (_silenceTriggersSec
-                              .where((sec) => sec <= seekBarValue + 0.02)
-                              .length +
-                          1)
-                          .clamp(1, chapterCount);
-                  final silenceInfo = _isPreparingWindowsAnalyzer
-                      ? _tr('silencePreparing')
-                      : (_isAnalyzingSilence
-                          ? _tr('silenceAnalyzing')
-                          : (_isAnalyzingWaveform
-                              ? _tr('waveformAnalyzing')
-                              : _tr(
-                                  'chapterStatus',
-                                  {
-                                    'current': '$currentChapter',
-                                    'total': '$chapterCount',
-                                  },
-                                )));
-                  final displayMessage =
-                      message.isEmpty ? silenceInfo : '$silenceInfo  $message';
-                  return Text(
-                    displayMessage,
-                    style: const TextStyle(fontSize: 16, color: Colors.black54),
-                  );
-                },
-              ),
-            ),
-
-            // ===== 再生ボタン群 =====
-            SizedBox(
-              height: 70,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 25,
-                    child: Tooltip(
-                      message: _tr('chapterPrevTooltip'),
-                      child: ElevatedButton(
-                        onPressed: handlePreviousChapterTap,
-                        onLongPress: () => skipTrack(false),
-                        style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
-                        child: const Icon(Icons.skip_previous, size: 40),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 50,
-                    child: Tooltip(
-                      message: _tr('playTooltip'),
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (currentFilePath == null) {
-                            showQuickSnack(_tr('pleaseOpenAudioFirst'), milliseconds: 1000);
-                            return;
-                          }
-                          try {
-                            if (_player.playing) {
-                              await _player.pause();
-                              showQuickSnack(_tr('pause'), milliseconds: 700);
-                            } else {
-                              if (_player.audioSource == null) {
-                                await loadCurrentFile(resetPlayState: false);
-                              }
-                              await _player.play();
-                              showQuickSnack(_tr('play'), milliseconds: 700);
+                          onPressed: () async {
+                            if (currentFilePath == null) {
+                              showQuickSnack(_tr('pleaseOpenAudioFirst'),
+                                  milliseconds: 1000);
+                              return;
                             }
-                          } catch (_) {
-                            showQuickSnack(_tr('playActionFailed'), milliseconds: 1000);
-                          }
-                        },
-                        onLongPress: stopPlayback,
-                        style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, backgroundColor: Colors.yellow.shade600),
-                        child: Icon(
-                          isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                          size: 50,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 25,
-                    child: Tooltip(
-                      message: _tr('chapterNextTooltip'),
-                      child: ElevatedButton(
-                        onPressed: () => skipChapter(true),
-                        onLongPress: () => skipTrack(true),
-                        style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
-                        child: const Icon(Icons.skip_next, size: 40),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ===== 速度 + 開く =====
-            SizedBox(
-              height: 60,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 50,
-                    child: Tooltip(
-                      message: _tr('speedTooltip'),
-                      child: ElevatedButton(
-                        onPressed: increaseSpeed,
-                        onLongPress: decreaseSpeed,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size.fromHeight(60),
-                        ),
-                        child: Text(
-                          "${playbackSpeed.toStringAsFixed(2)}x",
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                            try {
+                              if (_player.playing) {
+                                await _player.pause();
+                                showQuickSnack(_tr('pause'), milliseconds: 700);
+                              } else {
+                                if (_player.audioSource == null) {
+                                  await loadCurrentFile(resetPlayState: false);
+                                }
+                                await _player.play();
+                                showQuickSnack(_tr('play'), milliseconds: 700);
+                              }
+                            } catch (_) {
+                              showQuickSnack(_tr('playActionFailed'),
+                                  milliseconds: 1000);
+                            }
+                          },
+                          onLongPress: stopPlayback,
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              backgroundColor: Colors.yellow.shade600),
+                          child: Icon(
+                            isPlaying ? Icons.pause : Icons.play_arrow,
+                            size: 50,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 50,
-                    child: ElevatedButton(
-                      onPressed: openAudioFile,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size.fromHeight(60),
+                    Expanded(
+                      flex: 25,
+                      child: Tooltip(
+                        message: _tr('chapterNextTooltip'),
+                        child: ElevatedButton(
+                          onPressed: () => skipChapter(true),
+                          onLongPress: () => skipTrack(true),
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero),
+                          child: const Icon(Icons.skip_next, size: 40),
+                        ),
                       ),
-                      child: const Icon(Icons.folder_open, size: 40),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // ===== 速度 + 開く =====
+              SizedBox(
+                height: 60,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 50,
+                      child: Tooltip(
+                        message: _tr('speedTooltip'),
+                        child: ElevatedButton(
+                          onPressed: increaseSpeed,
+                          onLongPress: decreaseSpeed,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size.fromHeight(60),
+                          ),
+                          child: Text(
+                            "${playbackSpeed.toStringAsFixed(2)}x",
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 50,
+                      child: ElevatedButton(
+                        onPressed: openAudioFile,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size.fromHeight(60),
+                        ),
+                        child: const Icon(Icons.folder_open, size: 40),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
