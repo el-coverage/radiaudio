@@ -64,11 +64,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const String _prefDefaultPlaybackSpeed = 'default_playback_speed';
   static const String _prefChapterUnitSec = 'chapter_unit_sec';
   static const String _prefLanguageCode = 'language_code';
+  static const String _prefIsPremiumUser = 'is_premium_user';
+  static const String _prefAdsDisabledUntilIso = 'ads_disabled_until_iso';
+  static const String _prefAdOpportunityCount = 'ad_opportunity_count';
+  static const String _prefLastInterstitialAtIso = 'last_interstitial_at_iso';
   static const double _minChapterUnitSec = 0.3;
   static const double _maxChapterUnitSec = 2.0;
   static const double _silenceNoiseDb = -35.0;
   static const int _minVolumeLevel = 0;
   static const int _maxVolumeLevel = 20;
+  static const int _interstitialEveryOpportunities = 6;
+  static const Duration _interstitialCooldown = Duration(minutes: 15);
   static const Set<String> _audioExtensions = {
     'mp3',
     'wav',
@@ -92,6 +98,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
   DateTime? _lastPreviousChapterTapAt;
   static const Duration _chapterDoubleTapWindow = Duration(milliseconds: 350);
   String selectedLanguageCode = 'ja';
+  bool _isPremiumUser = false;
+  DateTime? _adsDisabledUntil;
+  int _adOpportunityCount = 0;
+  DateTime? _lastInterstitialAt;
+
+  bool get _isAdFree {
+    if (_isPremiumUser) return true;
+    final until = _adsDisabledUntil;
+    if (until == null) return false;
+    return DateTime.now().isBefore(until);
+  }
 
   /// 選択中言語の文字列を返す。未定義の言語は英語へフォールバックする。
   String _tr(String key, [Map<String, String> params = const {}]) {
@@ -200,6 +217,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _minChapterUnitSec,
       _maxChapterUnitSec,
     );
+    final loadedPremium = prefs.getBool(_prefIsPremiumUser) ?? false;
+    final loadedAdsDisabledUntilIso = prefs.getString(_prefAdsDisabledUntilIso);
+    final loadedAdsDisabledUntil = loadedAdsDisabledUntilIso == null
+        ? null
+        : DateTime.tryParse(loadedAdsDisabledUntilIso);
+    final loadedAdOpportunityCount =
+        prefs.getInt(_prefAdOpportunityCount) ?? 0;
+    final loadedLastInterstitialAtIso =
+        prefs.getString(_prefLastInterstitialAtIso);
+    final loadedLastInterstitialAt = loadedLastInterstitialAtIso == null
+        ? null
+        : DateTime.tryParse(loadedLastInterstitialAtIso);
     if (!mounted) return;
     setState(() {
       defaultMusicFolderPath = prefs.getString(_prefDefaultMusicFolderPath) ?? "";
@@ -207,6 +236,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
       playbackSpeed = normalizedDefaultSpeed;
       chapterUnitSec = normalizedChapterUnitSec;
       selectedLanguageCode = normalizedLanguageCode;
+      _isPremiumUser = loadedPremium;
+      _adsDisabledUntil = loadedAdsDisabledUntil;
+      _adOpportunityCount = loadedAdOpportunityCount;
+      _lastInterstitialAt = loadedLastInterstitialAt;
     });
     await _player.setSpeed(normalizedDefaultSpeed);
     await _applyPlayerVolume();
@@ -224,6 +257,106 @@ class _PlayerScreenState extends State<PlayerScreen> {
     await prefs.setDouble(_prefDefaultPlaybackSpeed, defaultSpeed);
     await prefs.setDouble(_prefChapterUnitSec, chapterSeconds);
     await prefs.setString(_prefLanguageCode, languageCode);
+  }
+
+  Future<void> _setPremiumStatus(bool premium) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isPremiumUser = premium;
+      if (premium) {
+        _adsDisabledUntil = null;
+      }
+    });
+    await prefs.setBool(_prefIsPremiumUser, premium);
+    if (premium) {
+      await prefs.remove(_prefAdsDisabledUntilIso);
+      showQuickSnack('Premium enabled. Ads are now disabled.', milliseconds: 1200);
+    } else {
+      showQuickSnack('Premium disabled. Ads may appear again.', milliseconds: 1200);
+    }
+  }
+
+  Future<void> _grantRewardAdFree(Duration duration) async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final until = now.add(duration);
+    if (!mounted) return;
+    setState(() {
+      _adsDisabledUntil = until;
+    });
+    await prefs.setString(_prefAdsDisabledUntilIso, until.toIso8601String());
+    showQuickSnack('Reward unlocked: ads off for 24 hours.', milliseconds: 1200);
+  }
+
+  Future<void> _registerAdOpportunity({required String source}) async {
+    if (_isAdFree) return;
+    if (isPlaying) return;
+
+    final now = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    _adOpportunityCount += 1;
+    await prefs.setInt(_prefAdOpportunityCount, _adOpportunityCount);
+
+    if (_adOpportunityCount % _interstitialEveryOpportunities != 0) {
+      return;
+    }
+    final last = _lastInterstitialAt;
+    if (last != null && now.difference(last) < _interstitialCooldown) {
+      return;
+    }
+
+    _lastInterstitialAt = now;
+    await prefs.setString(_prefLastInterstitialAtIso, now.toIso8601String());
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog.fullscreen(
+          child: SafeArea(
+            child: Container(
+              color: Colors.black,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'AD',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 44,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Interstitial ad placeholder ($source)',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close Ad'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// サンプル表示用に疑似波形バーの高さを生成する。
@@ -384,6 +517,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     if (moved) {
       await loadCurrentFile(resetPlayState: true, autoPlay: true);
+          unawaited(_registerAdOpportunity(source: 'skip_track'));
     }
     showQuickSnack(message);
   }
@@ -751,6 +885,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
         double tempDefaultSpeed = defaultPlaybackSpeed;
         double tempChapterUnitSec = chapterUnitSec;
         String tempLanguageCode = selectedLanguageCode;
+        bool tempPremium = _isPremiumUser;
+        DateTime? tempAdsDisabledUntil = _adsDisabledUntil;
 
         return StatefulBuilder(
           builder: (context, dialogSetState) {
@@ -862,6 +998,45 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         dialogSetState(() => tempChapterUnitSec = v);
                       },
                     ),
+                    const Divider(),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Premium (No Ads)'),
+                      subtitle: const Text('Simulated license switch for now'),
+                      value: tempPremium,
+                      onChanged: (value) async {
+                        await _setPremiumStatus(value);
+                        dialogSetState(() {
+                          tempPremium = _isPremiumUser;
+                          tempAdsDisabledUntil = _adsDisabledUntil;
+                        });
+                      },
+                    ),
+                    if (!tempPremium)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          tempAdsDisabledUntil != null &&
+                                  DateTime.now().isBefore(tempAdsDisabledUntil!)
+                              ? 'Ad-free until: ${tempAdsDisabledUntil!.toLocal()}'
+                              : 'Ad-free reward not active',
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ),
+                    if (!tempPremium)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            await _grantRewardAdFree(const Duration(hours: 24));
+                            dialogSetState(() {
+                              tempAdsDisabledUntil = _adsDisabledUntil;
+                            });
+                          },
+                          icon: const Icon(Icons.ondemand_video),
+                          label: const Text('Watch reward ad (simulate) -> 24h no ads'),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -891,6 +1066,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     );
                     Navigator.pop(context);
                     showQuickSnack(_tr('settingsSaved'), milliseconds: 700);
+                    unawaited(_registerAdOpportunity(source: 'settings_save'));
                     if (shouldReanalyzeSilence && currentPath != null) {
                       unawaited(_analyzeSilenceForAutoChapter(currentPath));
                     }
@@ -995,6 +1171,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       totalDurationSec = 0;
       isPlaying = false;
     });
+    unawaited(_registerAdOpportunity(source: 'open_audio'));
     await loadCurrentFile(resetPlayState: true, autoPlay: true);
     showQuickSnack(
       _tr('loadedFile', {'file': resolvedFileName}),
@@ -1089,10 +1266,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _syncSilenceTriggerIndexWithPosition(targetSec);
   }
 
+  Widget _buildAdBannerPlaceholder() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 56,
+        color: Colors.grey.shade900,
+        alignment: Alignment.center,
+        child: const Text(
+          'Banner Ad Placeholder',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
   @override
   /// プレイヤー画面全体のUIを構築する。
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: _isAdFree ? null : _buildAdBannerPlaceholder(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 60),
