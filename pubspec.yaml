@@ -31,11 +31,16 @@ dependencies:
   # ・Android / iOS / Windows 対応
   # ・ローカルファイル再生可能
   just_audio: ^0.9.36
+  just_audio_windows: ^0.2.2
 
   # 📂 ファイル・フォルダ選択ダイアログ
   # 各OSネイティブUIを呼び出す
   # Android / iOS / Windows 対応
   file_selector: ^1.0.1
+
+  # 💾 軽量な設定保存（キー・バリュー）
+  shared_preferences: ^2.3.2
+  ffmpeg_helper: ^1.0.1
 
 dev_dependencies:
   # テスト用（今回は特に使わないが残してOK）
