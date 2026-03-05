@@ -63,7 +63,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const String _prefDefaultMusicFolderPath = 'default_music_folder_path';
   static const String _prefDefaultPlaybackSpeed = 'default_playback_speed';
   static const String _prefChapterUnitSec = 'chapter_unit_sec';
-  static const String _prefSilenceSeparateMinSec = 'silence_separate_min_sec';
+  static const String _prefSkipTargetPrefix = 'skip_targets_v1::';
   static const String _prefLanguageCode = 'language_code';
   static const String _prefIsPremiumUser = 'is_premium_user';
   static const String _prefAdsDisabledUntilIso = 'ads_disabled_until_iso';
@@ -72,13 +72,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const double _minChapterUnitSec = 0.3;
   static const double _maxChapterUnitSec = 2.0;
   static const double _silenceNoiseDb = -70.0;
-  static const double _minSilenceSeparateMinSec = 0.1;
-  static const double _maxSilenceSeparateMinSec = 3.0;
   static const double _fixedMinSegmentSecForSilenceSplit = 8.0;
   static const double _fixedMaxSegmentSecWithoutSplit = 24.0;
   static const double _hardMinChapterSec = 8.0;
   static const double _silenceDetectWindowSec = 0.01;
-  double silenceSeparateMinSec = 1.0;
   static const int _minVolumeLevel = 0;
   static const int _maxVolumeLevel = 20;
   static const int _interstitialEveryOpportunities = 6;
@@ -93,6 +90,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     'opus',
   };
   List<double> _silenceTriggersSec = [];
+  Set<int> _skipTargetChapters = <int>{};
+  bool _isAutoSkippingChapter = false;
   int _nextSilenceTriggerIndex = 0;
   bool _isAnalyzingSilence = false;
   bool _notifiedSilenceAnalyzerUnsupported = false;
@@ -180,6 +179,153 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
   }
 
+  int _chapterCount() {
+    return _silenceTriggersSec.isEmpty ? 1 : _silenceTriggersSec.length + 1;
+  }
+
+  int _chapterIndexForSec(double sec) {
+    var chapterIndex = 0;
+    for (final triggerSec in _silenceTriggersSec) {
+      if (sec >= triggerSec) {
+        chapterIndex++;
+      } else {
+        break;
+      }
+    }
+    return chapterIndex;
+  }
+
+  double _chapterStartSec(int chapterIndex) {
+    if (chapterIndex <= 0) return 0.0;
+    final triggerIndex = chapterIndex - 1;
+    if (triggerIndex >= 0 && triggerIndex < _silenceTriggersSec.length) {
+      return _silenceTriggersSec[triggerIndex];
+    }
+    return totalDurationSec;
+  }
+
+  String _skipTargetStorageKey(String filePath) {
+    final normalizedUnit = chapterUnitSec.toStringAsFixed(1);
+    return '$_prefSkipTargetPrefix${normalizedPathKey(filePath)}::u=$normalizedUnit';
+  }
+
+  Future<void> _loadSkipTargetsForCurrentTrack() async {
+    final filePath = currentFilePath;
+    if (filePath == null) {
+      if (!mounted) return;
+      setState(() {
+        _skipTargetChapters = <int>{};
+      });
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final key = _skipTargetStorageKey(filePath);
+    final rawList = prefs.getStringList(key) ?? const <String>[];
+    final maxChapterIndex = _chapterCount() - 1;
+    final loaded = rawList
+        .map((value) => int.tryParse(value))
+        .whereType<int>()
+        .where((index) => index >= 0 && index <= maxChapterIndex)
+        .toSet();
+
+    if (!mounted) return;
+    setState(() {
+      _skipTargetChapters = loaded;
+    });
+  }
+
+  Future<void> _saveSkipTargetsForCurrentTrack() async {
+    final filePath = currentFilePath;
+    if (filePath == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final key = _skipTargetStorageKey(filePath);
+    final values = _skipTargetChapters
+        .toList(growable: false)
+      ..sort();
+    await prefs.setStringList(
+      key,
+      values.map((value) => value.toString()).toList(growable: false),
+    );
+  }
+
+  Future<void> _toggleSkipTargetAtLocalPosition({
+    required Offset localPosition,
+    required Size size,
+    required int rows,
+    required double durationSec,
+  }) async {
+    if (currentFilePath == null) {
+      showQuickSnack(_tr('pleaseOpenAudioFirst'), milliseconds: 1000);
+      return;
+    }
+    if (_isAnalyzingSilence) {
+      showQuickSnack(_tr('silenceAnalyzing'), milliseconds: 800);
+      return;
+    }
+
+    final targetSec = _seekSecFromLocalPosition(
+      localPosition: localPosition,
+      size: size,
+      rows: rows,
+      durationSec: durationSec,
+    );
+    final chapterIndex = _chapterIndexForSec(targetSec);
+    final chapterCount = _chapterCount();
+    if (chapterIndex < 0 || chapterIndex >= chapterCount) return;
+
+    if (!mounted) return;
+    setState(() {
+      if (_skipTargetChapters.contains(chapterIndex)) {
+        _skipTargetChapters.remove(chapterIndex);
+      } else {
+        _skipTargetChapters.add(chapterIndex);
+      }
+    });
+    await _saveSkipTargetsForCurrentTrack();
+
+    final isEnabled = _skipTargetChapters.contains(chapterIndex);
+    showQuickSnack(
+      _tr(
+        isEnabled ? 'chapterSkipOn' : 'chapterSkipOff',
+        {'chapter': '${chapterIndex + 1}'},
+      ),
+      milliseconds: 700,
+    );
+  }
+
+  Future<void> _autoSkipIfCurrentChapterIsTarget(double positionSec) async {
+    if (_isAutoSkippingChapter) return;
+    if (!_player.playing) return;
+    if (_skipTargetChapters.isEmpty) return;
+
+    final chapterCount = _chapterCount();
+    final currentChapter = _chapterIndexForSec(positionSec);
+    if (!_skipTargetChapters.contains(currentChapter)) return;
+
+    var targetChapter = currentChapter + 1;
+    while (
+        targetChapter < chapterCount && _skipTargetChapters.contains(targetChapter)) {
+      targetChapter++;
+    }
+    if (targetChapter >= chapterCount) {
+      return;
+    }
+
+    final targetSec = _chapterStartSec(targetChapter);
+    _isAutoSkippingChapter = true;
+    try {
+      await _player.seek(Duration(milliseconds: (targetSec * 1000).toInt()));
+      if (!mounted) return;
+      setState(() {
+        currentPositionSec = targetSec;
+      });
+      _syncSilenceTriggerIndexWithPosition(targetSec);
+    } finally {
+      _isAutoSkippingChapter = false;
+    }
+  }
+
   @override
 
   /// ストリーム購読を初期化し、再生位置・再生状態をUIへ反映する。
@@ -193,6 +339,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       setState(() {
         currentPositionSec = positionSec;
       });
+      unawaited(_autoSkipIfCurrentChapterIsTarget(positionSec));
     });
     _player.durationStream.listen((duration) {
       if (!mounted) return;
@@ -227,12 +374,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _minChapterUnitSec,
       _maxChapterUnitSec,
     );
-    final loadedSilenceSeparateMinSec =
-        prefs.getDouble(_prefSilenceSeparateMinSec) ?? silenceSeparateMinSec;
-    final normalizedSilenceSeparateMinSec = loadedSilenceSeparateMinSec.clamp(
-      _minSilenceSeparateMinSec,
-      _maxSilenceSeparateMinSec,
-    );
     final loadedPremium = prefs.getBool(_prefIsPremiumUser) ?? false;
     final loadedAdsDisabledUntilIso = prefs.getString(_prefAdsDisabledUntilIso);
     final loadedAdsDisabledUntil = loadedAdsDisabledUntilIso == null
@@ -251,7 +392,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
       defaultPlaybackSpeed = normalizedDefaultSpeed;
       playbackSpeed = normalizedDefaultSpeed;
       chapterUnitSec = normalizedChapterUnitSec;
-      silenceSeparateMinSec = normalizedSilenceSeparateMinSec;
       selectedLanguageCode = normalizedLanguageCode;
       _isPremiumUser = loadedPremium;
       _adsDisabledUntil = loadedAdsDisabledUntil;
@@ -267,14 +407,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     required String path,
     required double defaultSpeed,
     required double chapterSeconds,
-    required double silenceMinSec,
     required String languageCode,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefDefaultMusicFolderPath, path);
     await prefs.setDouble(_prefDefaultPlaybackSpeed, defaultSpeed);
     await prefs.setDouble(_prefChapterUnitSec, chapterSeconds);
-    await prefs.setDouble(_prefSilenceSeparateMinSec, silenceMinSec);
     await prefs.setString(_prefLanguageCode, languageCode);
   }
 
@@ -290,11 +428,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     await prefs.setBool(_prefIsPremiumUser, premium);
     if (premium) {
       await prefs.remove(_prefAdsDisabledUntilIso);
-      showQuickSnack('Premium enabled. Ads are now disabled.',
-          milliseconds: 1200);
+      showQuickSnack(_tr('premiumEnabled'), milliseconds: 1200);
     } else {
-      showQuickSnack('Premium disabled. Ads may appear again.',
-          milliseconds: 1200);
+      showQuickSnack(_tr('premiumDisabled'), milliseconds: 1200);
     }
   }
 
@@ -307,8 +443,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _adsDisabledUntil = until;
     });
     await prefs.setString(_prefAdsDisabledUntilIso, until.toIso8601String());
-    showQuickSnack('Reward unlocked: ads off for 24 hours.',
-        milliseconds: 1200);
+    showQuickSnack(_tr('rewardUnlocked24h'), milliseconds: 1200);
   }
 
   Future<void> _registerAdOpportunity({required String source}) async {
@@ -352,10 +487,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Text(
-                    'AD',
+                  Text(
+                    _tr('adLabel'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 44,
                       fontWeight: FontWeight.bold,
@@ -363,14 +498,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Interstitial ad placeholder ($source)',
+                    _tr('interstitialAdPlaceholder', {'source': source}),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const Spacer(),
                   ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close Ad'),
+                    child: Text(_tr('closeAd')),
                   ),
                 ],
               ),
@@ -708,7 +843,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       if (silenceEndSec <= silenceStartSec) continue;
       final segmentLenSec = silenceEndSec - termStartSec;
         if (segmentLenSec < _hardMinChapterSec) continue;
-      final shouldSplit = ((silenceDurationSec > silenceSeparateMinSec &&
+      final shouldSplit = ((silenceDurationSec > chapterUnitSec &&
             segmentLenSec > _fixedMinSegmentSecForSilenceSplit) ||
           segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
       if (!shouldSplit) continue;
@@ -724,6 +859,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _nextSilenceTriggerIndex = 0;
     });
     _syncSilenceTriggerIndexWithPosition(currentPositionSec);
+    unawaited(_loadSkipTargetsForCurrentTrack());
   }
 
   /// 読み込みファイルを対象に波形振幅を解析し、シークバー高さ用のデータを生成する。
@@ -912,6 +1048,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final path = currentFilePath;
     if (path == null) return;
 
+    if (!mounted) return;
+    setState(() {
+      _skipTargetChapters = <int>{};
+    });
+
     try {
       await _player.setFilePath(path);
       await _player.setSpeed(playbackSpeed);
@@ -944,7 +1085,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
         String tempFolderPath = defaultMusicFolderPath;
         double tempDefaultSpeed = defaultPlaybackSpeed;
         double tempChapterUnitSec = chapterUnitSec;
-        double tempSilenceSeparateMinSec = silenceSeparateMinSec;
         String tempLanguageCode = selectedLanguageCode;
         bool tempPremium = _isPremiumUser;
         DateTime? tempAdsDisabledUntil = _adsDisabledUntil;
@@ -1040,7 +1180,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_tr('chapterUnitSeconds')),
+                        Expanded(
+                          child: Text(_tr('chapterSplitSilenceLabel')),
+                        ),
                         Text(
                           _tr(
                             'secondsSuffix',
@@ -1058,31 +1200,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         dialogSetState(() => tempChapterUnitSec = v);
                       },
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('分割に必要な最小無音秒'),
-                        Text(
-                            '${tempSilenceSeparateMinSec.toStringAsFixed(2)}s'),
-                      ],
-                    ),
-                    Slider(
-                      min: _minSilenceSeparateMinSec,
-                      max: _maxSilenceSeparateMinSec,
-                      divisions: ((_maxSilenceSeparateMinSec -
-                                  _minSilenceSeparateMinSec) *
-                              20)
-                          .toInt(),
-                      value: tempSilenceSeparateMinSec,
-                      onChanged: (v) {
-                        dialogSetState(() => tempSilenceSeparateMinSec = v);
-                      },
-                    ),
                     const Divider(),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Premium (No Ads)'),
-                      subtitle: const Text('Simulated license switch for now'),
+                      title: Text(_tr('premiumNoAdsTitle')),
+                      subtitle: Text(_tr('premiumNoAdsSubtitle')),
                       value: tempPremium,
                       onChanged: (value) async {
                         await _setPremiumStatus(value);
@@ -1098,8 +1220,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         child: Text(
                           tempAdsDisabledUntil != null &&
                                   DateTime.now().isBefore(tempAdsDisabledUntil!)
-                              ? 'Ad-free until: ${tempAdsDisabledUntil!.toLocal()}'
-                              : 'Ad-free reward not active',
+                              ? _tr('adFreeUntil', {
+                                  'until': '${tempAdsDisabledUntil!.toLocal()}',
+                                })
+                              : _tr('adFreeRewardInactive'),
                           style: const TextStyle(
                               fontSize: 12, color: Colors.black54),
                         ),
@@ -1115,8 +1239,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             });
                           },
                           icon: const Icon(Icons.ondemand_video),
-                          label: const Text(
-                              'Watch reward ad (simulate) -> 24h no ads'),
+                          label: Text(_tr('watchRewardAdLabel')),
                         ),
                       ),
                   ],
@@ -1130,17 +1253,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     final shouldReanalyzeSilence =
-                        (chapterUnitSec - tempChapterUnitSec).abs() > 0.0001 ||
-                            (silenceSeparateMinSec - tempSilenceSeparateMinSec)
-                            .abs() >
-                          0.0001;
+                        (chapterUnitSec - tempChapterUnitSec).abs() > 0.0001;
                     final currentPath = currentFilePath;
                     setState(() {
                       defaultMusicFolderPath = tempFolderPath;
                       defaultPlaybackSpeed = tempDefaultSpeed;
                       playbackSpeed = tempDefaultSpeed;
                       chapterUnitSec = tempChapterUnitSec;
-                      silenceSeparateMinSec = tempSilenceSeparateMinSec;
                       selectedLanguageCode = tempLanguageCode;
                     });
                     await _player.setSpeed(tempDefaultSpeed);
@@ -1148,7 +1267,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       path: tempFolderPath,
                       defaultSpeed: tempDefaultSpeed,
                       chapterSeconds: tempChapterUnitSec,
-                      silenceMinSec: tempSilenceSeparateMinSec,
                       languageCode: tempLanguageCode,
                     );
                     Navigator.pop(context);
@@ -1364,9 +1482,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
         height: 56,
         color: Colors.grey.shade900,
         alignment: Alignment.center,
-        child: const Text(
-          'Banner Ad Placeholder',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        child: Text(
+          _tr('bannerAdPlaceholder'),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -1442,18 +1560,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       );
                       final totalBars = rows * barsPerRow;
                       final secPerBar = effectiveDurationSec / totalBars;
-                      int chapterIndexForSec(double sec) {
-                        var chapterIndex = 0;
-                        for (final triggerSec in _silenceTriggersSec) {
-                          if (sec >= triggerSec) {
-                            chapterIndex++;
-                          } else {
-                            break;
-                          }
-                        }
-                        return chapterIndex;
-                      }
-
                       return Row(
                         children: [
                           SizedBox(
@@ -1519,6 +1625,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       isDraggingSeekBar = false;
                                     });
                                   },
+                                  onLongPressStart: (details) {
+                                    unawaited(
+                                      _toggleSkipTargetAtLocalPosition(
+                                        localPosition: details.localPosition,
+                                        size: barSize,
+                                        rows: rows,
+                                        durationSec: effectiveDurationSec,
+                                      ),
+                                    );
+                                  },
                                   child: Column(
                                     children: List.generate(rows, (row) {
                                       return Expanded(
@@ -1547,7 +1663,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 final isPlayed =
                                                     barSec <= seekProgressSec;
                                                 final chapterIndex =
-                                                    chapterIndexForSec(barSec);
+                                                  _chapterIndexForSec(barSec);
+                                                final isSkipTarget =
+                                                  _skipTargetChapters.contains(
+                                                    chapterIndex);
 
                                                 return Expanded(
                                                   child: Container(
@@ -1559,7 +1678,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                         Alignment.bottomCenter,
                                                     child: Container(
                                                       height: renderedHeight,
-                                                      color: _isAnalyzingSilence
+                                                      color: isSkipTarget
+                                                        ? Colors.black
+                                                        : _isAnalyzingSilence
                                                           ? (isPlayed
                                                               ? _chapterColorForIndex(
                                                                   chapterIndex,
