@@ -9,8 +9,10 @@ const Map<String, String> trText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Iptal',
   'save': 'Kaydet',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'Ayarlari kapat',
   'pleaseOpenAudioFirst': 'Once bir ses dosyasi acin',
+  'selectAudioFileFromFolderPrompt': 'Bir ses dosyasi secin',
   'pleaseSelectAudioFile': 'Bir ses dosyasi secin',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> trText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

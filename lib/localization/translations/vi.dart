@@ -9,8 +9,10 @@ const Map<String, String> viText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Huy',
   'save': 'Luu',
-  'settingsSaved': 'Da luu cai dat',
+  
+  'closeSettings': 'Dong cai dat',
   'pleaseOpenAudioFirst': 'Vui long mo tep am thanh truoc',
+  'selectAudioFileFromFolderPrompt': 'Vui long chon tep am thanh',
   'pleaseSelectAudioFile': 'Vui long chon tep am thanh',
   'silenceChapterNotDetected': 'Khong tim thay chuong im lang',
   'lastChapter': 'Day la chuong cuoi',
@@ -45,3 +47,6 @@ const Map<String, String> viText = {
   'speedTooltip': '+0.25x (Nhan giu: -0.25x)',
   'iosDefaultFolderUnsupported': 'Thu muc mac dinh khong ho tro tren iOS',
 };
+
+
+

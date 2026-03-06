@@ -9,8 +9,10 @@ const Map<String, String> zhHantText = {
   'secondsSuffix': '{value}秒',
   'cancel': '取消',
   'save': '儲存',
-  'settingsSaved': '設定已儲存',
+  
+  'closeSettings': '關閉設定',
   'pleaseOpenAudioFirst': '請先開啟音訊檔',
+  'selectAudioFileFromFolderPrompt': '請選擇音訊檔',
   'pleaseSelectAudioFile': '請選擇音訊檔',
   'silenceChapterNotDetected': '未偵測到靜音章節',
   'lastChapter': '已是最後一章',
@@ -45,3 +47,6 @@ const Map<String, String> zhHantText = {
   'speedTooltip': '+0.25x (長按: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS 不支援預設資料夾',
 };
+
+
+

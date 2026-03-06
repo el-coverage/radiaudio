@@ -9,8 +9,10 @@ const Map<String, String> koText = {
   'secondsSuffix': '{value}초',
   'cancel': '취소',
   'save': '저장',
-  'settingsSaved': '설정이 저장되었습니다',
+  
+  'closeSettings': '설정 닫기',
   'pleaseOpenAudioFirst': '먼저 오디오 파일을 열어 주세요',
+  'selectAudioFileFromFolderPrompt': '오디오 파일을 선택해 주세요',
   'pleaseSelectAudioFile': '오디오 파일을 선택해 주세요',
   'silenceChapterNotDetected': '무음 챕터를 찾지 못했습니다',
   'lastChapter': '마지막 챕터입니다',
@@ -45,3 +47,6 @@ const Map<String, String> koText = {
   'speedTooltip': '+0.25x (길게 누르기: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS에서는 기본 폴더를 지원하지 않습니다',
 };
+
+
+

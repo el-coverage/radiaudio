@@ -9,8 +9,10 @@ const Map<String, String> ruText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Otmena',
   'save': 'Sohranit',
-  'settingsSaved': 'Nastroiki sohraneny',
+  
+  'closeSettings': 'Закрыть настройки',
   'pleaseOpenAudioFirst': 'Snachala otkroite audiofail',
+  'selectAudioFileFromFolderPrompt': 'Vyberite audiofail',
   'pleaseSelectAudioFile': 'Vyberite audiofail',
   'silenceChapterNotDetected': 'Glavy tishiny ne naiideny',
   'lastChapter': 'Eto posledniaia glava',
@@ -45,3 +47,6 @@ const Map<String, String> ruText = {
   'speedTooltip': '+0.25x (Dolgoe nazhatie: -0.25x)',
   'iosDefaultFolderUnsupported': 'Papka po umolchaniiu ne podderzhivaetsia na iOS',
 };
+
+
+

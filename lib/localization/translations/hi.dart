@@ -9,8 +9,10 @@ const Map<String, String> hiText = {
   'secondsSuffix': '{value}s',
   'cancel': 'रद्द करें',
   'save': 'सेव',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'सटगस बद कर',
   'pleaseOpenAudioFirst': 'पहले ऑडियो फाइल खोलें',
+  'selectAudioFileFromFolderPrompt': 'ऑडियो फाइल चुनें',
   'pleaseSelectAudioFile': 'ऑडियो फाइल चुनें',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> hiText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

@@ -9,8 +9,10 @@ const Map<String, String> zhHansText = {
   'secondsSuffix': '{value}秒',
   'cancel': '取消',
   'save': '保存',
-  'settingsSaved': '设置已保存',
+  
+  'closeSettings': '关闭设置',
   'pleaseOpenAudioFirst': '请先打开音频文件',
+  'selectAudioFileFromFolderPrompt': '请选择音频文件',
   'pleaseSelectAudioFile': '请选择音频文件',
   'silenceChapterNotDetected': '未检测到静音章节',
   'lastChapter': '已经是最后一章',
@@ -45,3 +47,6 @@ const Map<String, String> zhHansText = {
   'speedTooltip': '+0.25x (长按: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS 不支持默认文件夹',
 };
+
+
+

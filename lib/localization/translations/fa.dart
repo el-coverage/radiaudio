@@ -9,8 +9,10 @@ const Map<String, String> faText = {
   'secondsSuffix': '{value}s',
   'cancel': 'لغو',
   'save': 'ذخیره',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'بستن تنظیمات',
   'pleaseOpenAudioFirst': 'ابتدا یک فایل صوتی باز کنید',
+  'selectAudioFileFromFolderPrompt': 'یک فایل صوتی انتخاب کنید',
   'pleaseSelectAudioFile': 'یک فایل صوتی انتخاب کنید',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> faText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

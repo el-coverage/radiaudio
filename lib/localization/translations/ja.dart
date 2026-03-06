@@ -7,13 +7,19 @@ const Map<String, String> jaText = {
   'defaultPlaybackSpeed': 'デフォルト再生速度',
   'chapterUnitSeconds': 'チャプター単位秒数',
   'chapterSplitSilenceLabel': 'この秒数の無音があればチャプターを区切る',
+  'preventAutoSleepDuringPlaybackTitle': '再生時の自動スリープ防止',
+  'preventAutoSleepDuringPlaybackSubtitle':
+      '再生中のみ画面の自動スリープを防止します',
   'chapterSkipOn': 'チャプター{chapter} スキップON',
   'chapterSkipOff': 'チャプター{chapter} スキップOFF',
   'secondsSuffix': '{value}秒',
   'cancel': 'キャンセル',
   'save': '保存',
   'settingsSaved': '設定を保存しました',
+  'closeSettings': '設定を閉じる',
   'pleaseOpenAudioFirst': '先に音声ファイルを開いてください',
+  'selectAudioFileFromFolderPrompt':
+      '右下のフォルダボタンから音声ファイルを選択してください。',
   'pleaseSelectAudioFile': '音声ファイルを選択してください',
   'silenceChapterNotDetected': '無音チャプターが未検出です',
   'lastChapter': '最後のチャプターです',
@@ -60,3 +66,4 @@ const Map<String, String> jaText = {
   'adLabel': '広告',
   'bannerAdPlaceholder': 'バナー広告（ダミー）',
 };
+

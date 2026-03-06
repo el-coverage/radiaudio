@@ -9,8 +9,10 @@ const Map<String, String> esText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Cancelar',
   'save': 'Guardar',
-  'settingsSaved': 'Configuracion guardada',
+  
+  'closeSettings': 'Cerrar ajustes',
   'pleaseOpenAudioFirst': 'Abre primero un archivo de audio',
+  'selectAudioFileFromFolderPrompt': 'Selecciona un archivo de audio',
   'pleaseSelectAudioFile': 'Selecciona un archivo de audio',
   'silenceChapterNotDetected': 'No se detectaron capitulos de silencio',
   'lastChapter': 'Este es el ultimo capitulo',
@@ -45,3 +47,6 @@ const Map<String, String> esText = {
   'speedTooltip': '+0.25x (Mantener: -0.25x)',
   'iosDefaultFolderUnsupported': 'La carpeta predeterminada no es compatible en iOS',
 };
+
+
+

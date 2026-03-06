@@ -9,8 +9,10 @@ const Map<String, String> itText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Annulla',
   'save': 'Salva',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'Chiudi impostazioni',
   'pleaseOpenAudioFirst': 'Apri prima un file audio',
+  'selectAudioFileFromFolderPrompt': 'Seleziona un file audio',
   'pleaseSelectAudioFile': 'Seleziona un file audio',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> itText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

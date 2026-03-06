@@ -109,8 +109,9 @@ String tr(
   String key, [
   Map<String, String> params = const {},
 ]) {
-  final langMap = localizedText[languageCode] ?? localizedText['en']!;
-  var text = langMap[key] ?? localizedText['en']![key] ?? localizedText['ja']![key] ?? key;
+  final langMap = localizedText[languageCode] ?? localizedText['ja']!;
+  var text =
+      langMap[key] ?? localizedText['ja']![key] ?? localizedText['en']![key] ?? key;
   params.forEach((k, v) {
     text = text.replaceAll('{$k}', v);
   });

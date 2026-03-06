@@ -9,8 +9,10 @@ const Map<String, String> thText = {
   'secondsSuffix': '{value}วินาที',
   'cancel': 'ยกเลิก',
   'save': 'บันทึก',
-  'settingsSaved': 'บันทึกการตั้งค่าแล้ว',
+  
+  'closeSettings': 'ปดการตงคา',
   'pleaseOpenAudioFirst': 'กรุณาเปิดไฟล์เสียงก่อน',
+  'selectAudioFileFromFolderPrompt': 'กรุณาเลือกไฟล์เสียง',
   'pleaseSelectAudioFile': 'กรุณาเลือกไฟล์เสียง',
   'silenceChapterNotDetected': 'ไม่พบบทจากช่วงเงียบ',
   'lastChapter': 'นี่คือบทสุดท้าย',
@@ -45,3 +47,6 @@ const Map<String, String> thText = {
   'speedTooltip': '+0.25x (กดค้าง: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS ไม่รองรับโฟลเดอร์เริ่มต้น',
 };
+
+
+

@@ -7,13 +7,19 @@ const Map<String, String> enText = {
   'defaultPlaybackSpeed': 'Default Playback Speed',
   'chapterUnitSeconds': 'Chapter Unit Seconds',
   'chapterSplitSilenceLabel': 'Split chapter when silence reaches this duration',
+  'preventAutoSleepDuringPlaybackTitle': 'Prevent Auto Sleep During Playback',
+  'preventAutoSleepDuringPlaybackSubtitle':
+      'Keep the screen awake only while audio is playing',
   'chapterSkipOn': 'Chapter {chapter} skip ON',
   'chapterSkipOff': 'Chapter {chapter} skip OFF',
   'secondsSuffix': '{value}s',
   'cancel': 'Cancel',
   'save': 'Save',
   'settingsSaved': 'Settings saved',
+  'closeSettings': 'Close settings',
   'pleaseOpenAudioFirst': 'Please open an audio file first',
+  'selectAudioFileFromFolderPrompt':
+      'Please select an audio file using the folder button at the bottom right.',
   'pleaseSelectAudioFile': 'Please select an audio file',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -60,3 +66,4 @@ const Map<String, String> enText = {
   'adLabel': 'AD',
   'bannerAdPlaceholder': 'Banner Ad Placeholder',
 };
+

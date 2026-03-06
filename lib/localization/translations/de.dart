@@ -9,8 +9,10 @@ const Map<String, String> deText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Abbrechen',
   'save': 'Speichern',
-  'settingsSaved': 'Einstellungen gespeichert',
+  
+  'closeSettings': 'Einstellungen schliessen',
   'pleaseOpenAudioFirst': 'Bitte zuerst eine Audiodatei offnen',
+  'selectAudioFileFromFolderPrompt': 'Bitte eine Audiodatei auswahlen',
   'pleaseSelectAudioFile': 'Bitte eine Audiodatei auswahlen',
   'silenceChapterNotDetected': 'Keine Stille-Kapitel erkannt',
   'lastChapter': 'Dies ist das letzte Kapitel',
@@ -45,3 +47,6 @@ const Map<String, String> deText = {
   'speedTooltip': '+0.25x (Langdruck: -0.25x)',
   'iosDefaultFolderUnsupported': 'Standardordner wird unter iOS nicht unterstutzt',
 };
+
+
+

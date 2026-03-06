@@ -9,8 +9,10 @@ const Map<String, String> swText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Ghairi',
   'save': 'Hifadhi',
-  'settingsSaved': 'Mipangilio imehifadhiwa',
+  
+  'closeSettings': 'Funga mipangilio',
   'pleaseOpenAudioFirst': 'Tafadhali fungua faili ya sauti kwanza',
+  'selectAudioFileFromFolderPrompt': 'Tafadhali chagua faili ya sauti',
   'pleaseSelectAudioFile': 'Tafadhali chagua faili ya sauti',
   'silenceChapterNotDetected': 'Hakuna sura za ukimya zilizogunduliwa',
   'lastChapter': 'Hii ni sura ya mwisho',
@@ -45,3 +47,6 @@ const Map<String, String> swText = {
   'speedTooltip': '+0.25x (Bonyeza kwa muda: -0.25x)',
   'iosDefaultFolderUnsupported': 'Folda chaguomsingi haitumiki kwenye iOS',
 };
+
+
+

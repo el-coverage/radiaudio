@@ -4,17 +4,25 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_min_gpl/return_code.dart';
 import 'package:ffmpeg_helper/ffmpeg_helper.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:radio_player_simple/localization/app_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid || Platform.isIOS) {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.radiaudio.playback',
+      androidNotificationChannelName: 'Radiaudio Playback',
+      androidNotificationOngoing: true,
+    );
+  }
   runApp(const RadioMockApp());
 }
 
@@ -23,9 +31,9 @@ class RadioMockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const PlayerScreen(),
+      home: PlayerScreen(),
     );
   }
 }
@@ -37,9 +45,15 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+class _SilenceInterval {
+  const _SilenceInterval({required this.startSec, required this.endSec});
+
+  final double startSec;
+  final double endSec;
+}
+
 class _PlayerScreenState extends State<PlayerScreen> {
-  String currentTitle =
-      "これはとても長いラジオ番組タイトルのサンプルです。高齢者でも読みやすいように3行固定表示します。256文字程度を想定しています。";
+  String currentTitle = '';
 
   int currentIndex = 0;
   int totalCount = 0;
@@ -69,7 +83,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const String _prefAdsDisabledUntilIso = 'ads_disabled_until_iso';
   static const String _prefAdOpportunityCount = 'ad_opportunity_count';
   static const String _prefLastInterstitialAtIso = 'last_interstitial_at_iso';
-  static const double _minChapterUnitSec = 0.3;
+  static const String _prefPreventAutoSleepDuringPlayback =
+      'prevent_auto_sleep_during_playback';
+  static const double _minChapterUnitSec = 0.1;
   static const double _maxChapterUnitSec = 2.0;
   static const double _silenceNoiseDb = -70.0;
   static const double _fixedMinSegmentSecForSilenceSplit = 8.0;
@@ -90,6 +106,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     'opus',
   };
   List<double> _silenceTriggersSec = [];
+  List<_SilenceInterval> _silenceIntervals = [];
   Set<int> _skipTargetChapters = <int>{};
   bool _isAutoSkippingChapter = false;
   int _nextSilenceTriggerIndex = 0;
@@ -106,6 +123,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const Duration _chapterDoubleTapWindow = Duration(milliseconds: 350);
   String selectedLanguageCode = 'ja';
   bool _isPremiumUser = false;
+  bool _preventAutoSleepDuringPlayback = false;
   DateTime? _adsDisabledUntil;
   int _adOpportunityCount = 0;
   DateTime? _lastInterstitialAt;
@@ -163,6 +181,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
     await _applyPlayerVolume();
     showQuickSnack(_tr('volumeWithValue', {'value': '$volumeLevel'}));
+  }
+
+  /// 設定値と再生状態に応じて、自動スリープ防止を適用する。
+  Future<void> _syncAutoSleepPrevention() async {
+    final supportedMobile = Platform.isAndroid || Platform.isIOS;
+    final shouldEnable =
+        supportedMobile && _preventAutoSleepDuringPlayback && isPlaying;
+    await WakelockPlus.toggle(enable: shouldEnable);
   }
 
   /// 現在の再生位置から、次に監視すべき無音トリガー位置を再計算する。
@@ -354,6 +380,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       setState(() {
         isPlaying = playing;
       });
+      unawaited(_syncAutoSleepPrevention());
     });
   }
 
@@ -375,6 +402,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _maxChapterUnitSec,
     );
     final loadedPremium = prefs.getBool(_prefIsPremiumUser) ?? false;
+    final loadedPreventAutoSleep =
+      prefs.getBool(_prefPreventAutoSleepDuringPlayback) ?? false;
     final loadedAdsDisabledUntilIso = prefs.getString(_prefAdsDisabledUntilIso);
     final loadedAdsDisabledUntil = loadedAdsDisabledUntilIso == null
         ? null
@@ -394,12 +423,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
       chapterUnitSec = normalizedChapterUnitSec;
       selectedLanguageCode = normalizedLanguageCode;
       _isPremiumUser = loadedPremium;
+      _preventAutoSleepDuringPlayback = loadedPreventAutoSleep;
       _adsDisabledUntil = loadedAdsDisabledUntil;
       _adOpportunityCount = loadedAdOpportunityCount;
       _lastInterstitialAt = loadedLastInterstitialAt;
     });
     await _player.setSpeed(normalizedDefaultSpeed);
     await _applyPlayerVolume();
+    await _syncAutoSleepPrevention();
   }
 
   /// 設定ダイアログで確定した設定値を永続化する。
@@ -408,11 +439,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
     required double defaultSpeed,
     required double chapterSeconds,
     required String languageCode,
+    required bool preventAutoSleepDuringPlayback,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefDefaultMusicFolderPath, path);
     await prefs.setDouble(_prefDefaultPlaybackSpeed, defaultSpeed);
     await prefs.setDouble(_prefChapterUnitSec, chapterSeconds);
+    await prefs.setString(_prefLanguageCode, languageCode);
+    await prefs.setBool(
+      _prefPreventAutoSleepDuringPlayback,
+      preventAutoSleepDuringPlayback,
+    );
+  }
+
+  Future<void> _saveLanguagePreference(String languageCode) async {
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefLanguageCode, languageCode);
   }
 
@@ -623,12 +664,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
       }
     }
 
-    await _player.seek(Duration(milliseconds: (targetSec * 1000).toInt()));
+    final resolvedTargetSec = targetSec;
     if (!mounted) return;
     setState(() {
-      currentPositionSec = targetSec!;
+      currentPositionSec = resolvedTargetSec;
     });
-    _syncSilenceTriggerIndexWithPosition(targetSec);
+    _syncSilenceTriggerIndexWithPosition(resolvedTargetSec);
+    await _player.seek(
+      Duration(milliseconds: (resolvedTargetSec * 1000).toInt()),
+    );
     final chapterMessage = forward
         ? _tr('nextChapter')
         : (backwardSteps >= 2 ? _tr('prevPrevChapter') : _tr('prevChapter'));
@@ -708,6 +752,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   /// 保持しているリソースを解放する。
   void dispose() {
+    unawaited(WakelockPlus.disable());
     _statusMessage.dispose();
     _player.dispose();
     super.dispose();
@@ -728,6 +773,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _isAnalyzingSilence = false;
         _silenceAnalysisPath = audioPath;
         _silenceTriggersSec = [];
+        _silenceIntervals = [];
         _nextSilenceTriggerIndex = 0;
       });
       return;
@@ -738,6 +784,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _isAnalyzingSilence = true;
       _silenceAnalysisPath = audioPath;
       _silenceTriggersSec = [];
+      _silenceIntervals = [];
       _nextSilenceTriggerIndex = 0;
     });
 
@@ -829,6 +876,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (!mounted) return;
     if (_silenceAnalysisPath != audioPath) return;
     final splitTriggers = <double>[];
+    final silenceIntervals = <_SilenceInterval>[];
     var termStartSec = 0.0;
     final intervalCount = math.min(
       silenceStarts.length,
@@ -848,6 +896,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
           segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
       if (!shouldSplit) continue;
       splitTriggers.add(silenceEndSec);
+      silenceIntervals.add(
+        _SilenceInterval(startSec: silenceStartSec, endSec: silenceEndSec),
+      );
       termStartSec = silenceEndSec;
     }
 
@@ -856,6 +907,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _isPreparingWindowsAnalyzer = false;
       _isAnalyzingSilence = false;
       _silenceTriggersSec = splitTriggers;
+      _silenceIntervals = silenceIntervals;
       _nextSilenceTriggerIndex = 0;
     });
     _syncSilenceTriggerIndexWithPosition(currentPositionSec);
@@ -1009,6 +1061,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return _waveformLevels[mappedIndex];
   }
 
+  /// 指定秒数が無音区間内なら true を返す。
+  bool _isInSilenceInterval(double sec) {
+    for (final interval in _silenceIntervals) {
+      if (sec >= interval.startSec && sec <= interval.endSec) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Windows用の同梱FFmpegを準備し、実行可能パスを返す。
   Future<String?> _ensureWindowsBundledFfmpeg() async {
     if (!Platform.isWindows) return null;
@@ -1054,7 +1116,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
     });
 
     try {
-      await _player.setFilePath(path);
+      await _player.setAudioSource(
+        AudioSource.file(
+          path,
+          tag: MediaItem(
+            id: path,
+            album: 'Radiaudio',
+            title: fileNameFromPath(path),
+          ),
+        ),
+      );
       await _player.setSpeed(playbackSpeed);
       if (autoPlay) {
         await _player.play();
@@ -1086,13 +1157,25 @@ class _PlayerScreenState extends State<PlayerScreen> {
         double tempDefaultSpeed = defaultPlaybackSpeed;
         double tempChapterUnitSec = chapterUnitSec;
         String tempLanguageCode = selectedLanguageCode;
+        bool tempPreventAutoSleepDuringPlayback =
+            _preventAutoSleepDuringPlayback;
         bool tempPremium = _isPremiumUser;
         DateTime? tempAdsDisabledUntil = _adsDisabledUntil;
 
         return StatefulBuilder(
           builder: (context, dialogSetState) {
             return AlertDialog(
-              title: Text(_tr('settings')),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_tr('settings')),
+                  IconButton(
+                    tooltip: _tr('closeSettings'),
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1108,6 +1191,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             dialogSetState(() {
                               tempLanguageCode = value;
                             });
+                            if (!mounted) return;
+                            setState(() {
+                              selectedLanguageCode = value;
+                            });
+                            unawaited(_saveLanguagePreference(value));
                           },
                           items: supportedLanguageCodes
                               .map(
@@ -1156,6 +1244,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           dialogSetState(() {
                             tempFolderPath = selectedPath;
                           });
+                          if (!mounted) return;
+                          setState(() {
+                            defaultMusicFolderPath = selectedPath;
+                          });
+                          unawaited(
+                            saveDefaultSettings(
+                              path: selectedPath,
+                              defaultSpeed: defaultPlaybackSpeed,
+                              chapterSeconds: chapterUnitSec,
+                              languageCode: selectedLanguageCode,
+                              preventAutoSleepDuringPlayback:
+                                  _preventAutoSleepDuringPlayback,
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -1174,6 +1276,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       value: tempDefaultSpeed,
                       onChanged: (v) {
                         dialogSetState(() => tempDefaultSpeed = v);
+                        if (!mounted) return;
+                        setState(() {
+                          defaultPlaybackSpeed = v;
+                          playbackSpeed = v;
+                        });
+                        unawaited(_player.setSpeed(v));
+                        unawaited(
+                          saveDefaultSettings(
+                            path: defaultMusicFolderPath,
+                            defaultSpeed: v,
+                            chapterSeconds: chapterUnitSec,
+                            languageCode: selectedLanguageCode,
+                            preventAutoSleepDuringPlayback:
+                                _preventAutoSleepDuringPlayback,
+                          ),
+                        );
                       },
                     ),
                     const Divider(),
@@ -1194,10 +1312,61 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     Slider(
                       min: _minChapterUnitSec,
                       max: _maxChapterUnitSec,
-                      divisions: 7,
+                      divisions:
+                          ((_maxChapterUnitSec - _minChapterUnitSec) * 10)
+                              .round(),
                       value: tempChapterUnitSec,
                       onChanged: (v) {
                         dialogSetState(() => tempChapterUnitSec = v);
+                        if (!mounted) return;
+                        setState(() {
+                          chapterUnitSec = v;
+                        });
+                        unawaited(
+                          saveDefaultSettings(
+                            path: defaultMusicFolderPath,
+                            defaultSpeed: defaultPlaybackSpeed,
+                            chapterSeconds: v,
+                            languageCode: selectedLanguageCode,
+                            preventAutoSleepDuringPlayback:
+                                _preventAutoSleepDuringPlayback,
+                          ),
+                        );
+                      },
+                      onChangeEnd: (_) {
+                        final currentPath = currentFilePath;
+                        if (currentPath != null) {
+                          // Re-generate chapter boundaries shown on the seekbar.
+                          unawaited(_analyzeSilenceForAutoChapter(currentPath));
+                        }
+                      },
+                    ),
+                    const Divider(),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_tr('preventAutoSleepDuringPlaybackTitle')),
+                      subtitle: Text(
+                        _tr('preventAutoSleepDuringPlaybackSubtitle'),
+                      ),
+                      value: tempPreventAutoSleepDuringPlayback,
+                      onChanged: (value) {
+                        dialogSetState(() {
+                          tempPreventAutoSleepDuringPlayback = value;
+                        });
+                        if (!mounted) return;
+                        setState(() {
+                          _preventAutoSleepDuringPlayback = value;
+                        });
+                        unawaited(_syncAutoSleepPrevention());
+                        unawaited(
+                          saveDefaultSettings(
+                            path: defaultMusicFolderPath,
+                            defaultSpeed: defaultPlaybackSpeed,
+                            chapterSeconds: chapterUnitSec,
+                            languageCode: selectedLanguageCode,
+                            preventAutoSleepDuringPlayback: value,
+                          ),
+                        );
                       },
                     ),
                     const Divider(),
@@ -1245,40 +1414,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(_tr('cancel')),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final shouldReanalyzeSilence =
-                        (chapterUnitSec - tempChapterUnitSec).abs() > 0.0001;
-                    final currentPath = currentFilePath;
-                    setState(() {
-                      defaultMusicFolderPath = tempFolderPath;
-                      defaultPlaybackSpeed = tempDefaultSpeed;
-                      playbackSpeed = tempDefaultSpeed;
-                      chapterUnitSec = tempChapterUnitSec;
-                      selectedLanguageCode = tempLanguageCode;
-                    });
-                    await _player.setSpeed(tempDefaultSpeed);
-                    await saveDefaultSettings(
-                      path: tempFolderPath,
-                      defaultSpeed: tempDefaultSpeed,
-                      chapterSeconds: tempChapterUnitSec,
-                      languageCode: tempLanguageCode,
-                    );
-                    Navigator.pop(context);
-                    showQuickSnack(_tr('settingsSaved'), milliseconds: 700);
-                    unawaited(_registerAdOpportunity(source: 'settings_save'));
-                    if (shouldReanalyzeSilence && currentPath != null) {
-                      unawaited(_analyzeSilenceForAutoChapter(currentPath));
-                    }
-                  },
-                  child: Text(_tr('save')),
-                ),
-              ],
             );
           },
         );
@@ -1466,13 +1601,49 @@ class _PlayerScreenState extends State<PlayerScreen> {
       return;
     }
 
-    await _player.seek(Duration(milliseconds: (targetSec * 1000).toInt()));
-    if (!mounted) return;
     setState(() {
       isDraggingSeekBar = false;
       currentPositionSec = targetSec;
     });
     _syncSilenceTriggerIndexWithPosition(targetSec);
+    await _player.seek(Duration(milliseconds: (targetSec * 1000).toInt()));
+  }
+
+  /// 再生/一時停止を即時UI反映で切り替える。
+  Future<void> _togglePlayPause() async {
+    if (currentFilePath == null) {
+      showQuickSnack(_tr('pleaseOpenAudioFirst'), milliseconds: 1000);
+      return;
+    }
+
+    final wasPlaying = isPlaying;
+    final nextPlaying = !wasPlaying;
+
+    if (!mounted) return;
+    setState(() {
+      isPlaying = nextPlaying;
+    });
+    unawaited(_syncAutoSleepPrevention());
+
+    try {
+      if (wasPlaying) {
+        await _player.pause();
+        showQuickSnack(_tr('pause'), milliseconds: 700);
+      } else {
+        if (_player.audioSource == null) {
+          await loadCurrentFile(resetPlayState: false);
+        }
+        await _player.play();
+        showQuickSnack(_tr('play'), milliseconds: 700);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        isPlaying = wasPlaying;
+      });
+      unawaited(_syncAutoSleepPrevention());
+      showQuickSnack(_tr('playActionFailed'), milliseconds: 1000);
+    }
   }
 
   Widget _buildAdBannerPlaceholder() {
@@ -1494,6 +1665,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   /// プレイヤー画面全体のUIを構築する。
   Widget build(BuildContext context) {
+    final displayTitle =
+        currentFilePath == null ? _tr('selectAudioFileFromFolderPrompt') : currentTitle;
     return Scaffold(
       bottomNavigationBar: _isAdFree ? null : _buildAdBannerPlaceholder(),
       body: SafeArea(
@@ -1510,7 +1683,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     // タイトル（3行固定）
                     Expanded(
                       child: Text(
-                        currentTitle,
+                        displayTitle,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -1652,8 +1825,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 );
                                                 final barSec =
                                                     (flatIndex + 1) * secPerBar;
+                                                final isSilentBar =
+                                                  _isInSilenceInterval(barSec);
                                                 final double renderedHeight =
-                                                    hasWaveform
+                                                  isSilentBar
+                                                    ? 0.0
+                                                    : hasWaveform
                                                         ? (waveformLevel >= 0
                                                             ? 4.0 +
                                                                 (waveformLevel *
@@ -1842,28 +2019,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       child: Tooltip(
                         message: _tr('playTooltip'),
                         child: ElevatedButton(
-                          onPressed: () async {
-                            if (currentFilePath == null) {
-                              showQuickSnack(_tr('pleaseOpenAudioFirst'),
-                                  milliseconds: 1000);
-                              return;
-                            }
-                            try {
-                              if (_player.playing) {
-                                await _player.pause();
-                                showQuickSnack(_tr('pause'), milliseconds: 700);
-                              } else {
-                                if (_player.audioSource == null) {
-                                  await loadCurrentFile(resetPlayState: false);
-                                }
-                                await _player.play();
-                                showQuickSnack(_tr('play'), milliseconds: 700);
-                              }
-                            } catch (_) {
-                              showQuickSnack(_tr('playActionFailed'),
-                                  milliseconds: 1000);
-                            }
-                          },
+                          onPressed: _togglePlayPause,
                           onLongPress: stopPlayback,
                           style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.zero,

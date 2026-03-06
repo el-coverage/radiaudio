@@ -9,8 +9,10 @@ const Map<String, String> nlText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Annuleren',
   'save': 'Opslaan',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'Instellingen sluiten',
   'pleaseOpenAudioFirst': 'Open eerst een audiobestand',
+  'selectAudioFileFromFolderPrompt': 'Selecteer een audiobestand',
   'pleaseSelectAudioFile': 'Selecteer een audiobestand',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> nlText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

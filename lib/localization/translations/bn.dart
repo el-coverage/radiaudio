@@ -9,8 +9,10 @@ const Map<String, String> bnText = {
   'secondsSuffix': '{value}s',
   'cancel': 'বাতিল',
   'save': 'সংরক্ষণ',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'সটস বনধ করন',
   'pleaseOpenAudioFirst': 'আগে একটি অডিও ফাইল খুলুন',
+  'selectAudioFileFromFolderPrompt': 'একটি অডিও ফাইল নির্বাচন করুন',
   'pleaseSelectAudioFile': 'একটি অডিও ফাইল নির্বাচন করুন',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> bnText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

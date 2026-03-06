@@ -9,8 +9,10 @@ const Map<String, String> plText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Anuluj',
   'save': 'Zapisz',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'Zamknij ustawienia',
   'pleaseOpenAudioFirst': 'Najpierw otworz plik audio',
+  'selectAudioFileFromFolderPrompt': 'Wybierz plik audio',
   'pleaseSelectAudioFile': 'Wybierz plik audio',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> plText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

@@ -41,6 +41,11 @@ dependencies:
   # 💾 軽量な設定保存（キー・バリュー）
   shared_preferences: ^2.3.2
   ffmpeg_helper: ^1.0.1
+  package_info_plus: ^4.2.0
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  just_audio_background: ^0.0.1-beta.17
+  wakelock_plus: ^1.1.6
 
 dev_dependencies:
   # テスト用（今回は特に使わないが残してOK）

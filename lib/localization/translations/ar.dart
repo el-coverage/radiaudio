@@ -9,8 +9,10 @@ const Map<String, String> arText = {
   'secondsSuffix': '{value}ث',
   'cancel': 'الغاء',
   'save': 'حفظ',
-  'settingsSaved': 'تم حفظ الاعدادات',
+  
+  'closeSettings': 'اغلاق الاعدادات',
   'pleaseOpenAudioFirst': 'يرجى فتح ملف صوتي اولا',
+  'selectAudioFileFromFolderPrompt': 'يرجى اختيار ملف صوتي',
   'pleaseSelectAudioFile': 'يرجى اختيار ملف صوتي',
   'silenceChapterNotDetected': 'لم يتم اكتشاف فصول الصمت',
   'lastChapter': 'هذا هو الفصل الاخير',
@@ -45,3 +47,6 @@ const Map<String, String> arText = {
   'speedTooltip': '+0.25x (ضغط مطول: -0.25x)',
   'iosDefaultFolderUnsupported': 'المجلد الافتراضي غير مدعوم على iOS',
 };
+
+
+

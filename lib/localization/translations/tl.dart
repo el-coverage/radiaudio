@@ -9,8 +9,10 @@ const Map<String, String> tlText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Kanselahin',
   'save': 'I-save',
-  'settingsSaved': 'Na-save ang settings',
+  
+  'closeSettings': 'Isara ang mga setting',
   'pleaseOpenAudioFirst': 'Magbukas muna ng audio file',
+  'selectAudioFileFromFolderPrompt': 'Pumili ng audio file',
   'pleaseSelectAudioFile': 'Pumili ng audio file',
   'silenceChapterNotDetected': 'Walang na-detect na silent chapters',
   'lastChapter': 'Ito na ang huling chapter',
@@ -45,3 +47,6 @@ const Map<String, String> tlText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Hindi suportado ang default folder sa iOS',
 };
+
+
+

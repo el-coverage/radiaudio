@@ -9,8 +9,10 @@ const Map<String, String> ptBrText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Cancelar',
   'save': 'Salvar',
-  'settingsSaved': 'Settings saved',
+  
+  'closeSettings': 'Fechar configuracoes',
   'pleaseOpenAudioFirst': 'Abra um arquivo de audio primeiro',
+  'selectAudioFileFromFolderPrompt': 'Selecione um arquivo de audio',
   'pleaseSelectAudioFile': 'Selecione um arquivo de audio',
   'silenceChapterNotDetected': 'No silence chapters detected',
   'lastChapter': 'This is the last chapter',
@@ -45,3 +47,6 @@ const Map<String, String> ptBrText = {
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
 };
+
+
+

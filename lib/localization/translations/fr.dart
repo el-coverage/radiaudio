@@ -9,8 +9,10 @@ const Map<String, String> frText = {
   'secondsSuffix': '{value}s',
   'cancel': 'Annuler',
   'save': 'Enregistrer',
-  'settingsSaved': 'Parametres enregistres',
+  
+  'closeSettings': 'Fermer les parametres',
   'pleaseOpenAudioFirst': 'Ouvrez d abord un fichier audio',
+  'selectAudioFileFromFolderPrompt': 'Selectionnez un fichier audio',
   'pleaseSelectAudioFile': 'Selectionnez un fichier audio',
   'silenceChapterNotDetected': 'Aucun chapitre de silence detecte',
   'lastChapter': 'C est le dernier chapitre',
@@ -45,3 +47,6 @@ const Map<String, String> frText = {
   'speedTooltip': '+0.25x (Appui long : -0.25x)',
   'iosDefaultFolderUnsupported': 'Le dossier par defaut n est pas pris en charge sur iOS',
 };
+
+
+
