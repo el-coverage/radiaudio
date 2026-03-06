@@ -46,7 +46,24 @@ const Map<String, String> frText = {
   'playActionFailed': 'Echec de l action de lecture',
   'speedTooltip': '+0.25x (Appui long : -0.25x)',
   'iosDefaultFolderUnsupported': 'Le dossier par defaut n est pas pris en charge sur iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Empecher la mise en veille automatique pendant la lecture',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Garder l ecran allume uniquement pendant la lecture audio',
+  'premiumEnabled': 'Premium active. Les publicites sont desactivees.',
+  'premiumDisabled': 'Premium desactive. Les publicites peuvent reapparaitre.',
+  'rewardUnlocked24h': 'Recompense activee : sans pub pendant 24 h.',
+  'premiumNoAdsTitle': 'Premium (Sans publicite)',
+  'premiumNoAdsSubtitle': 'Interrupteur de licence simule pour le moment',
+  'adFreeUntil': 'Sans pub jusqu a : {until}',
+  'adFreeRewardInactive': 'La recompense sans pub n est pas active',
+  'watchRewardAdLabel': 'Voir une pub recompensee (simulation) -> 24 h sans pub',
+  'chapterSplitSilenceLabel': 'Fractionner les chapitres lorsque le silence atteint cette duree',
+  'chapterSkipOn': 'Ignorer le chapitre {chapter} ACTIVE',
+  'chapterSkipOff': 'Ignorer le chapitre {chapter} DESACTIVE',
+  'settingsSaved': 'Parametres enregistres',
+  'interstitialAdPlaceholder': 'Espace reserve publicitaire interstitiel ({source})',
+  'closeAd': 'Fermer la pub',
+  'adLabel': 'Pub',
+  'bannerAdPlaceholder': 'Espace reserve de banniere publicitaire',
+  'fileIndexInFolder': 'Dans le dossier {current}/{total}',
 };
-
-
-

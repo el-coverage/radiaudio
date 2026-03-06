@@ -46,7 +46,24 @@ const Map<String, String> trText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Calma sirasinda otomatik uyumayi engelle',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Yalnizca ses oynarken ekrani acik tut',
+  'premiumEnabled': 'Premium etkin. Reklamlar simdi kapatildi.',
+  'premiumDisabled': 'Premium devre disi. Reklamlar yeniden gorunebilir.',
+  'rewardUnlocked24h': 'Odul acildi: 24 saat reklamsiz.',
+  'premiumNoAdsTitle': 'Premium (Reklamsiz)',
+  'premiumNoAdsSubtitle': 'Simdilik simule lisans anahtari',
+  'adFreeUntil': 'Reklamsiz su tarihe kadar: {until}',
+  'adFreeRewardInactive': 'Reklamsiz odul aktif degil',
+  'watchRewardAdLabel': 'Odullu reklam izle (simulasyon) -> 24s reklamsiz',
+  'chapterSplitSilenceLabel': 'Sessizlik bu sureye ulastiginda bolumleri ayir',
+  'chapterSkipOn': 'Bolum {chapter} atlama ACIK',
+  'chapterSkipOff': 'Bolum {chapter} atlama KAPALI',
+  'settingsSaved': 'Ayarlar kaydedildi',
+  'interstitialAdPlaceholder': 'Gecis reklami yer tutucusu ({source})',
+  'closeAd': 'Reklami kapat',
+  'adLabel': 'Reklam',
+  'bannerAdPlaceholder': 'Afiş reklam yer tutucusu',
+  'fileIndexInFolder': 'Klasorde {current}/{total}',
 };
-
-
-

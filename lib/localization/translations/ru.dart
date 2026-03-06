@@ -46,7 +46,24 @@ const Map<String, String> ruText = {
   'playActionFailed': 'Oshibka deistviia vosproizvedeniia',
   'speedTooltip': '+0.25x (Dolgoe nazhatie: -0.25x)',
   'iosDefaultFolderUnsupported': 'Papka po umolchaniiu ne podderzhivaetsia na iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Не включать автосон во время воспроизведения',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Держать экран активным только во время воспроизведения аудио',
+  'premiumEnabled': 'Премиум включен. Реклама теперь отключена.',
+  'premiumDisabled': 'Премиум отключен. Реклама может снова появиться.',
+  'rewardUnlocked24h': 'Награда активна: 24 часа без рекламы.',
+  'premiumNoAdsTitle': 'Премиум (Без рекламы)',
+  'premiumNoAdsSubtitle': 'Пока используется имитация лицензии',
+  'adFreeUntil': 'Без рекламы до: {until}',
+  'adFreeRewardInactive': 'Награда без рекламы не активна',
+  'watchRewardAdLabel': 'Смотреть рекламу за награду (имитация) -> 24ч без рекламы',
+  'chapterSplitSilenceLabel': 'Разделять главы, когда тишина достигает этой длительности',
+  'chapterSkipOn': 'Пропуск главы {chapter} ВКЛ',
+  'chapterSkipOff': 'Пропуск главы {chapter} ВЫКЛ',
+  'settingsSaved': 'Настройки сохранены',
+  'interstitialAdPlaceholder': 'Заглушка межстраничной рекламы ({source})',
+  'closeAd': 'Закрыть рекламу',
+  'adLabel': 'Реклама',
+  'bannerAdPlaceholder': 'Заглушка баннерной рекламы',
+  'fileIndexInFolder': 'В папке {current}/{total}',
 };
-
-
-

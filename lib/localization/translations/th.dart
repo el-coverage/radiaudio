@@ -46,7 +46,24 @@ const Map<String, String> thText = {
   'playActionFailed': 'คำสั่งเล่นล้มเหลว',
   'speedTooltip': '+0.25x (กดค้าง: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS ไม่รองรับโฟลเดอร์เริ่มต้น',
+
+  'preventAutoSleepDuringPlaybackTitle': 'ปองกนพกหนาจออตโนมตระหวางเลน',
+  'preventAutoSleepDuringPlaybackSubtitle': 'ใหหนาจอตดอยเฉพาะตอนทกำลงเลนเสยง',
+  'premiumEnabled': 'เปดพรเมยมแลว ปดโฆษณาเรยบรอย',
+  'premiumDisabled': 'ปดพรเมยมแลว โฆษณาอาจกลบมาแสดงอกครง',
+  'rewardUnlocked24h': 'ปลดลอกรางวล: ไมมโฆษณา 24 ชวโมง',
+  'premiumNoAdsTitle': 'พรเมยม (ไมมโฆษณา)',
+  'premiumNoAdsSubtitle': 'ตอนนเปนสวตชไลเซนสแบบจำลอง',
+  'adFreeUntil': 'ไมมโฆษณาถง: {until}',
+  'adFreeRewardInactive': 'รางวลไมมโฆษณายงไมเปดใชงาน',
+  'watchRewardAdLabel': 'ดโฆษณารบรางวล (จำลอง) -> ไมมโฆษณา 24 ชม.',
+  'chapterSplitSilenceLabel': 'แยกบทเมอความเงยบถงระยะเวลาน',
+  'chapterSkipOn': 'ขามบท {chapter} เปด',
+  'chapterSkipOff': 'ขามบท {chapter} ปด',
+  'settingsSaved': 'บนทกการตงคาแลว',
+  'interstitialAdPlaceholder': 'ตวแทนโฆษณาคนหนา ({source})',
+  'closeAd': 'ปดโฆษณา',
+  'adLabel': 'โฆษณา',
+  'bannerAdPlaceholder': 'ตวแทนโฆษณาแบนเนอร',
+  'fileIndexInFolder': 'ในโฟลเดอร {current}/{total}',
 };
-
-
-

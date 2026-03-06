@@ -46,7 +46,24 @@ const Map<String, String> viText = {
   'playActionFailed': 'Thao tac phat that bai',
   'speedTooltip': '+0.25x (Nhan giu: -0.25x)',
   'iosDefaultFolderUnsupported': 'Thu muc mac dinh khong ho tro tren iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Chan tu dong ngu khi dang phat',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Chi giu man hinh sang khi dang phat am thanh',
+  'premiumEnabled': 'Premium da bat. Quang cao da duoc tat.',
+  'premiumDisabled': 'Premium da tat. Quang cao co the xuat hien lai.',
+  'rewardUnlocked24h': 'Da mo phan thuong: khong quang cao trong 24 gio.',
+  'premiumNoAdsTitle': 'Premium (Khong quang cao)',
+  'premiumNoAdsSubtitle': 'Cong tac giay phep mo phong tam thoi',
+  'adFreeUntil': 'Khong quang cao den: {until}',
+  'adFreeRewardInactive': 'Phan thuong khong quang cao chua kich hoat',
+  'watchRewardAdLabel': 'Xem quang cao thuong (mo phong) -> 24h khong quang cao',
+  'chapterSplitSilenceLabel': 'Tach cac chuong khi khoang lang dat thoi luong nay',
+  'chapterSkipOn': 'Bo qua chuong {chapter} BAT',
+  'chapterSkipOff': 'Bo qua chuong {chapter} TAT',
+  'settingsSaved': 'Da luu cai dat',
+  'interstitialAdPlaceholder': 'Vi tri quang cao xen ke ({source})',
+  'closeAd': 'Dong quang cao',
+  'adLabel': 'Quang cao',
+  'bannerAdPlaceholder': 'Vi tri quang cao bieu ngu',
+  'fileIndexInFolder': 'Trong thu muc {current}/{total}',
 };
-
-
-

@@ -6,7 +6,7 @@ const Map<String, String> enText = {
   'useThisFolder': 'Use this folder',
   'defaultPlaybackSpeed': 'Default Playback Speed',
   'chapterUnitSeconds': 'Chapter Unit Seconds',
-  'chapterSplitSilenceLabel': 'Split chapter when silence reaches this duration',
+  'chapterSplitSilenceLabel': 'Split chapters when silence reaches this duration',
   'preventAutoSleepDuringPlaybackTitle': 'Prevent Auto Sleep During Playback',
   'preventAutoSleepDuringPlaybackSubtitle':
       'Keep the screen awake only while audio is playing',
@@ -57,13 +57,13 @@ const Map<String, String> enText = {
   'premiumDisabled': 'Premium disabled. Ads may appear again.',
   'rewardUnlocked24h': 'Reward unlocked: ads off for 24 hours.',
   'interstitialAdPlaceholder': 'Interstitial ad placeholder ({source})',
-  'closeAd': 'Close Ad',
+  'closeAd': 'Close ad',
   'premiumNoAdsTitle': 'Premium (No Ads)',
   'premiumNoAdsSubtitle': 'Simulated license switch for now',
   'adFreeUntil': 'Ad-free until: {until}',
   'adFreeRewardInactive': 'Ad-free reward not active',
   'watchRewardAdLabel': 'Watch reward ad (simulate) -> 24h no ads',
-  'adLabel': 'AD',
-  'bannerAdPlaceholder': 'Banner Ad Placeholder',
+  'adLabel': 'Ad',
+  'bannerAdPlaceholder': 'Banner ad placeholder',
+  'fileIndexInFolder': 'In folder {current}/{total}',
 };
-

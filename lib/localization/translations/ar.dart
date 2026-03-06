@@ -46,7 +46,24 @@ const Map<String, String> arText = {
   'playActionFailed': 'فشل اجراء التشغيل',
   'speedTooltip': '+0.25x (ضغط مطول: -0.25x)',
   'iosDefaultFolderUnsupported': 'المجلد الافتراضي غير مدعوم على iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'منع السكون التلقائي أثناء التشغيل',
+  'preventAutoSleepDuringPlaybackSubtitle': 'أبق الشاشة مستيقظة فقط أثناء تشغيل الصوت',
+  'premiumEnabled': 'تم تفعيل بريميوم. تم تعطيل الإعلانات الآن.',
+  'premiumDisabled': 'تم تعطيل بريميوم. قد تظهر الإعلانات مرة أخرى.',
+  'rewardUnlocked24h': 'تم فتح المكافأة: بدون إعلانات لمدة 24 ساعة.',
+  'premiumNoAdsTitle': 'بريميوم (بدون إعلانات)',
+  'premiumNoAdsSubtitle': 'تبديل ترخيص تجريبي حاليا',
+  'adFreeUntil': 'بدون إعلانات حتى: {until}',
+  'adFreeRewardInactive': 'مكافأة بدون إعلانات غير مفعلة',
+  'watchRewardAdLabel': 'شاهد إعلان مكافأة (محاكاة) -> 24 ساعة بدون إعلانات',
+  'chapterSplitSilenceLabel': 'قسم الفصول عندما يصل الصمت إلى هذه المدة',
+  'chapterSkipOn': 'تخطي الفصل {chapter} تشغيل',
+  'chapterSkipOff': 'تخطي الفصل {chapter} إيقاف',
+  'settingsSaved': 'تم حفظ الإعدادات',
+  'interstitialAdPlaceholder': 'عنصر نائب لإعلان بيني ({source})',
+  'closeAd': 'إغلاق الإعلان',
+  'adLabel': 'إعلان',
+  'bannerAdPlaceholder': 'عنصر نائب لإعلان بانر',
+  'fileIndexInFolder': 'في المجلد {current}/{total}',
 };
-
-
-

@@ -6,7 +6,7 @@ const Map<String, String> jaText = {
   'useThisFolder': 'このフォルダを使う',
   'defaultPlaybackSpeed': 'デフォルト再生速度',
   'chapterUnitSeconds': 'チャプター単位秒数',
-  'chapterSplitSilenceLabel': 'この秒数の無音があればチャプターを区切る',
+  'chapterSplitSilenceLabel': 'この秒数の無音でチャプターを分割',
   'preventAutoSleepDuringPlaybackTitle': '再生時の自動スリープ防止',
   'preventAutoSleepDuringPlaybackSubtitle':
       '再生中のみ画面の自動スリープを防止します',
@@ -65,5 +65,5 @@ const Map<String, String> jaText = {
   'watchRewardAdLabel': '報酬広告を見る（シミュレーション）→ 24時間広告なし',
   'adLabel': '広告',
   'bannerAdPlaceholder': 'バナー広告（ダミー）',
+  'fileIndexInFolder': 'フォルダ内 {current}/{total}',
 };
-

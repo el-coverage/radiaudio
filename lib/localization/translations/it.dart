@@ -46,7 +46,24 @@ const Map<String, String> itText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Impedisci sospensione automatica durante la riproduzione',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Mantieni lo schermo attivo solo durante la riproduzione audio',
+  'premiumEnabled': 'Premium attivato. Gli annunci ora sono disattivati.',
+  'premiumDisabled': 'Premium disattivato. Gli annunci potrebbero riapparire.',
+  'rewardUnlocked24h': 'Ricompensa attivata: niente annunci per 24 ore.',
+  'premiumNoAdsTitle': 'Premium (Senza annunci)',
+  'premiumNoAdsSubtitle': 'Interruttore licenza simulato per ora',
+  'adFreeUntil': 'Senza annunci fino a: {until}',
+  'adFreeRewardInactive': 'Ricompensa senza annunci non attiva',
+  'watchRewardAdLabel': 'Guarda annuncio premio (simulazione) -> 24h senza annunci',
+  'chapterSplitSilenceLabel': 'Dividi i capitoli quando il silenzio raggiunge questa durata',
+  'chapterSkipOn': 'Salta capitolo {chapter} ATTIVO',
+  'chapterSkipOff': 'Salta capitolo {chapter} DISATTIVO',
+  'settingsSaved': 'Impostazioni salvate',
+  'interstitialAdPlaceholder': 'Segnaposto annuncio interstiziale ({source})',
+  'closeAd': 'Chiudi annuncio',
+  'adLabel': 'Annuncio',
+  'bannerAdPlaceholder': 'Segnaposto annuncio banner',
+  'fileIndexInFolder': 'Nella cartella {current}/{total}',
 };
-
-
-

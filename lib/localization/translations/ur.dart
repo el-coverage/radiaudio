@@ -46,7 +46,24 @@ const Map<String, String> urText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'پلے بیک کے دوران خودکار سلیپ روکیں',
+  'preventAutoSleepDuringPlaybackSubtitle': 'صرف آڈیو چلتے وقت اسکرین کو بیدار رکھیں',
+  'premiumEnabled': 'پریمیم فعال ہے اشتہارات اب بند ہیں',
+  'premiumDisabled': 'پریمیم غیر فعال ہے اشتہارات دوبارہ ظاہر ہو سکتے ہیں',
+  'rewardUnlocked24h': 'انعام فعال: 24 گھنٹے بغیر اشتہار',
+  'premiumNoAdsTitle': 'پریمیم (بغیر اشتہار)',
+  'premiumNoAdsSubtitle': 'فی الحال نقلی لائسنس سوئچ',
+  'adFreeUntil': 'بغیر اشتہار تا: {until}',
+  'adFreeRewardInactive': 'بغیر اشتہار انعام فعال نہیں',
+  'watchRewardAdLabel': 'انعامی اشتہار دیکھیں (نقلی) -> 24 گھنٹے بغیر اشتہار',
+  'chapterSplitSilenceLabel': 'جب خاموشی اس دورانیے تک پہنچے تو ابواب تقسیم کریں',
+  'chapterSkipOn': 'باب {chapter} اسکیپ آن',
+  'chapterSkipOff': 'باب {chapter} اسکیپ آف',
+  'settingsSaved': 'ترتیبات محفوظ ہو گئیں',
+  'interstitialAdPlaceholder': 'درمیانی اشتہار کا پلیس ہولڈر ({source})',
+  'closeAd': 'اشتہار بند کریں',
+  'adLabel': 'اشتہار',
+  'bannerAdPlaceholder': 'بینر اشتہار پلیس ہولڈر',
+  'fileIndexInFolder': 'فولڈر میں {current}/{total}',
 };
-
-
-

@@ -46,7 +46,24 @@ const Map<String, String> faText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'جلوگیری از خواب خودکار هنگام پخش',
+  'preventAutoSleepDuringPlaybackSubtitle': 'فقط هنگام پخش صدا صفحه را بیدار نگه دار',
+  'premiumEnabled': 'پریمیوم فعال شد. تبلیغات اکنون غیرفعال است.',
+  'premiumDisabled': 'پریمیوم غیرفعال شد. ممکن است دوباره تبلیغات نمایش داده شود.',
+  'rewardUnlocked24h': 'پاداش فعال شد: 24 ساعت بدون تبلیغ.',
+  'premiumNoAdsTitle': 'پریمیوم (بدون تبلیغ)',
+  'premiumNoAdsSubtitle': 'فعلا کلید مجوز شبیه سازی شده',
+  'adFreeUntil': 'بدون تبلیغ تا: {until}',
+  'adFreeRewardInactive': 'پاداش بدون تبلیغ فعال نیست',
+  'watchRewardAdLabel': 'دیدن تبلیغ جایزه (شبیه سازی) -> 24 ساعت بدون تبلیغ',
+  'chapterSplitSilenceLabel': 'وقتی سکوت به این مدت برسد فصلها را تقسیم کن',
+  'chapterSkipOn': 'پرش فصل {chapter} روشن',
+  'chapterSkipOff': 'پرش فصل {chapter} خاموش',
+  'settingsSaved': 'تنظیمات ذخیره شد',
+  'interstitialAdPlaceholder': 'جاینگهدار تبلیغ بینابینی ({source})',
+  'closeAd': 'بستن تبلیغ',
+  'adLabel': 'تبلیغ',
+  'bannerAdPlaceholder': 'جاینگهدار تبلیغ بنری',
+  'fileIndexInFolder': 'در پوشه {current}/{total}',
 };
-
-
-

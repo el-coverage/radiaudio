@@ -46,7 +46,24 @@ const Map<String, String> swText = {
   'playActionFailed': 'Kitendo cha uchezaji kimeshindwa',
   'speedTooltip': '+0.25x (Bonyeza kwa muda: -0.25x)',
   'iosDefaultFolderUnsupported': 'Folda chaguomsingi haitumiki kwenye iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Zuia usingizi wa kiotomatiki wakati wa uchezaji',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Weka skrini iendelee kuwaka tu wakati sauti inacheza',
+  'premiumEnabled': 'Premium imewashwa. Matangazo yamezimwa sasa.',
+  'premiumDisabled': 'Premium imezimwa. Matangazo yanaweza kuonekana tena.',
+  'rewardUnlocked24h': 'Zawadi imewashwa: saa 24 bila matangazo.',
+  'premiumNoAdsTitle': 'Premium (Hakuna Matangazo)',
+  'premiumNoAdsSubtitle': 'Swichi ya leseni ya kuigiza kwa sasa',
+  'adFreeUntil': 'Bila matangazo hadi: {until}',
+  'adFreeRewardInactive': 'Zawadi ya bila matangazo haijawashwa',
+  'watchRewardAdLabel': 'Tazama tangazo la zawadi (uigaji) -> saa 24 bila matangazo',
+  'chapterSplitSilenceLabel': 'Gawanya sura wakati ukimya unapofikia muda huu',
+  'chapterSkipOn': 'Ruka sura ya {chapter} IMEWASHWA',
+  'chapterSkipOff': 'Ruka sura ya {chapter} IMEZIMWA',
+  'settingsSaved': 'Mipangilio imehifadhiwa',
+  'interstitialAdPlaceholder': 'Kishika nafasi cha tangazo la katikati ({source})',
+  'closeAd': 'Funga tangazo',
+  'adLabel': 'Tangazo',
+  'bannerAdPlaceholder': 'Kishika nafasi cha tangazo la bango',
+  'fileIndexInFolder': 'Kwenye folda {current}/{total}',
 };
-
-
-

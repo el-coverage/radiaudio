@@ -46,7 +46,24 @@ const Map<String, String> hiText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'पलबक क दरन ऑट सलप रक',
+  'preventAutoSleepDuringPlaybackSubtitle': 'ऑडय चलन पर ह सकरन जगत रख',
+  'premiumEnabled': 'परमयम चल ह वजञपन अब बद ह',
+  'premiumDisabled': 'परमयम बद ह वजञपन फर स दख सकत ह',
+  'rewardUnlocked24h': 'रवरड सकरय: 24 घट बन वजञपन',
+  'premiumNoAdsTitle': 'परमयम (बन वजञपन)',
+  'premiumNoAdsSubtitle': 'फलहल समयलटड लइसस सवच',
+  'adFreeUntil': 'बन वजञपन तक: {until}',
+  'adFreeRewardInactive': 'बन वजञपन रवरड सकरय नह ह',
+  'watchRewardAdLabel': 'रवरड वजञपन दख (समयलट) -> 24 घट बन वजञपन',
+  'chapterSplitSilenceLabel': 'जब सननट इस अवध तक पहच त अधयय वभजत कर',
+  'chapterSkipOn': 'अधयय {chapter} सकप चल',
+  'chapterSkipOff': 'अधयय {chapter} सकप बद',
+  'settingsSaved': 'सटगस सहज गई',
+  'interstitialAdPlaceholder': 'इटरसटशयल वजञपन पलसहलडर ({source})',
+  'closeAd': 'वजञपन बद कर',
+  'adLabel': 'वजञपन',
+  'bannerAdPlaceholder': 'बनर वजञपन पलसहलडर',
+  'fileIndexInFolder': 'फलडर म {current}/{total}',
 };
-
-
-

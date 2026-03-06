@@ -46,7 +46,24 @@ const Map<String, String> deText = {
   'playActionFailed': 'Wiedergabeaktion fehlgeschlagen',
   'speedTooltip': '+0.25x (Langdruck: -0.25x)',
   'iosDefaultFolderUnsupported': 'Standardordner wird unter iOS nicht unterstutzt',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Automatischen Ruhezustand waehrend Wiedergabe verhindern',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Bildschirm nur waehrend der Audiowiedergabe wach halten',
+  'premiumEnabled': 'Premium aktiviert. Werbung ist jetzt deaktiviert.',
+  'premiumDisabled': 'Premium deaktiviert. Werbung kann wieder erscheinen.',
+  'rewardUnlocked24h': 'Belohnung aktiviert: 24 Stunden ohne Werbung.',
+  'premiumNoAdsTitle': 'Premium (Ohne Werbung)',
+  'premiumNoAdsSubtitle': 'Simulierter Lizenzschalter fuer jetzt',
+  'adFreeUntil': 'Werbefrei bis: {until}',
+  'adFreeRewardInactive': 'Werbefrei-Belohnung ist nicht aktiv',
+  'watchRewardAdLabel': 'Belohnungsanzeige ansehen (Simulation) -> 24h ohne Werbung',
+  'chapterSplitSilenceLabel': 'Kapitel teilen, wenn die Stille diese Dauer erreicht',
+  'chapterSkipOn': 'Kapitel {chapter} ueberspringen EIN',
+  'chapterSkipOff': 'Kapitel {chapter} ueberspringen AUS',
+  'settingsSaved': 'Einstellungen gespeichert',
+  'interstitialAdPlaceholder': 'Interstitial-Werbeplatzhalter ({source})',
+  'closeAd': 'Werbung schliessen',
+  'adLabel': 'Anzeige',
+  'bannerAdPlaceholder': 'Banner-Werbeplatzhalter',
+  'fileIndexInFolder': 'Im Ordner {current}/{total}',
 };
-
-
-

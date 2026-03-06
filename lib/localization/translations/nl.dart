@@ -46,7 +46,24 @@ const Map<String, String> nlText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Automatische slaapstand tijdens afspelen voorkomen',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Houd het scherm alleen wakker tijdens audioweergave',
+  'premiumEnabled': 'Premium ingeschakeld. Advertenties zijn nu uitgeschakeld.',
+  'premiumDisabled': 'Premium uitgeschakeld. Advertenties kunnen weer verschijnen.',
+  'rewardUnlocked24h': 'Beloning geactiveerd: 24 uur advertentievrij.',
+  'premiumNoAdsTitle': 'Premium (Geen advertenties)',
+  'premiumNoAdsSubtitle': 'Gesimuleerde licentieschakelaar voor nu',
+  'adFreeUntil': 'Advertentievrij tot: {until}',
+  'adFreeRewardInactive': 'Advertentievrije beloning is niet actief',
+  'watchRewardAdLabel': 'Bekijk beloningsadvertentie (simulatie) -> 24u geen advertenties',
+  'chapterSplitSilenceLabel': 'Splits hoofdstukken wanneer de stilte deze duur bereikt',
+  'chapterSkipOn': 'Hoofdstuk {chapter} overslaan AAN',
+  'chapterSkipOff': 'Hoofdstuk {chapter} overslaan UIT',
+  'settingsSaved': 'Instellingen opgeslagen',
+  'interstitialAdPlaceholder': 'Tijdelijke aanduiding voor interstitial-advertentie ({source})',
+  'closeAd': 'Advertentie sluiten',
+  'adLabel': 'Advertentie',
+  'bannerAdPlaceholder': 'Tijdelijke aanduiding voor banneradvertentie',
+  'fileIndexInFolder': 'In map {current}/{total}',
 };
-
-
-

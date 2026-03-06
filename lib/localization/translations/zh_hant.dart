@@ -46,7 +46,24 @@ const Map<String, String> zhHantText = {
   'playActionFailed': '播放操作失敗',
   'speedTooltip': '+0.25x (長按: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS 不支援預設資料夾',
+
+  'preventAutoSleepDuringPlaybackTitle': '播放時防止自動休眠',
+  'preventAutoSleepDuringPlaybackSubtitle': '僅在音訊播放時保持螢幕常亮',
+  'premiumEnabled': '已啟用進階版，廣告已關閉。',
+  'premiumDisabled': '已停用進階版，廣告可能再次出現。',
+  'rewardUnlocked24h': '獎勵已解鎖：24 小時無廣告。',
+  'premiumNoAdsTitle': '進階版（無廣告）',
+  'premiumNoAdsSubtitle': '目前為模擬授權切換',
+  'adFreeUntil': '無廣告到期：{until}',
+  'adFreeRewardInactive': '無廣告獎勵未啟用',
+  'watchRewardAdLabel': '觀看獎勵廣告（模擬）-> 24 小時無廣告',
+  'chapterSplitSilenceLabel': '當靜音達到此時長時分割章節',
+  'chapterSkipOn': '章節 {chapter} 跳過 開',
+  'chapterSkipOff': '章節 {chapter} 跳過 關',
+  'settingsSaved': '設定已儲存',
+  'interstitialAdPlaceholder': '插頁廣告佔位符（{source}）',
+  'closeAd': '關閉廣告',
+  'adLabel': '廣告',
+  'bannerAdPlaceholder': '橫幅廣告佔位符',
+  'fileIndexInFolder': '資料夾內 {current}/{total}',
 };
-
-
-

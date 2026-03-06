@@ -46,7 +46,24 @@ const Map<String, String> plText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Zapobiegaj automatycznemu uspieniu podczas odtwarzania',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Utrzymuj ekran aktywny tylko podczas odtwarzania audio',
+  'premiumEnabled': 'Premium wlaczone. Reklamy sa teraz wylaczone.',
+  'premiumDisabled': 'Premium wylaczone. Reklamy moga pojawic sie ponownie.',
+  'rewardUnlocked24h': 'Nagroda aktywna: 24 godziny bez reklam.',
+  'premiumNoAdsTitle': 'Premium (Bez reklam)',
+  'premiumNoAdsSubtitle': 'Na razie symulowany przelacznik licencji',
+  'adFreeUntil': 'Bez reklam do: {until}',
+  'adFreeRewardInactive': 'Nagroda bez reklam nieaktywna',
+  'watchRewardAdLabel': 'Obejrzyj reklame z nagroda (symulacja) -> 24h bez reklam',
+  'chapterSplitSilenceLabel': 'Podziel rozdzialy, gdy cisza osiagnie ten czas',
+  'chapterSkipOn': 'Pomijanie rozdzialu {chapter} WL.',
+  'chapterSkipOff': 'Pomijanie rozdzialu {chapter} WYL.',
+  'settingsSaved': 'Ustawienia zapisane',
+  'interstitialAdPlaceholder': 'Placeholder reklamy pelnoekranowej ({source})',
+  'closeAd': 'Zamknij reklame',
+  'adLabel': 'Reklama',
+  'bannerAdPlaceholder': 'Placeholder reklamy banerowej',
+  'fileIndexInFolder': 'W folderze {current}/{total}',
 };
-
-
-

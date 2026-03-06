@@ -46,7 +46,24 @@ const Map<String, String> bnText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'পলবযক চলকলন সবযকরয সলপ বনধ রখন',
+  'preventAutoSleepDuringPlaybackSubtitle': 'অডও চলর সমযই শধ সকরন জগরত রখন',
+  'premiumEnabled': 'পরমযম চল হযছ বজঞপন এখন বনধ',
+  'premiumDisabled': 'পরমযম বনধ হযছ আবর বজঞপন দখ যত পর',
+  'rewardUnlocked24h': 'পরসকর চল:  ঘণট বজঞপনমকত',
+  'premiumNoAdsTitle': 'পরমযম (বজঞপন নই)',
+  'premiumNoAdsSubtitle': 'এখনর জনয সমলটড লইসনস সইচ',
+  'adFreeUntil': 'বজঞপনমকত থকব: {until}',
+  'adFreeRewardInactive': 'বজঞপনমকত পরসকর সকরয নয',
+  'watchRewardAdLabel': 'রওযরড বজঞপন দখন (সমলট) ->  ঘণট বজঞপন নই',
+  'chapterSplitSilenceLabel': 'নরবত এই সময পছল অধযয ভগ করন',
+  'chapterSkipOn': 'অধযয {chapter} সকপ চল',
+  'chapterSkipOff': 'অধযয {chapter} সকপ বনধ',
+  'settingsSaved': 'সটস সরকষত হযছ',
+  'interstitialAdPlaceholder': 'ইনটরসটশযল বজঞপনর পলসহলডর ({source})',
+  'closeAd': 'বজঞপন বনধ করন',
+  'adLabel': 'বজঞপন',
+  'bannerAdPlaceholder': 'বযনর বজঞপনর পলসহলডর',
+  'fileIndexInFolder': 'ফলডর {current}/{total}',
 };
-
-
-

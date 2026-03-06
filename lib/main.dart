@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:ffmpeg_helper/ffmpeg_helper.dart' hide FFmpegKit, ReturnCode;
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:ffmpeg_helper/ffmpeg_helper.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -17,6 +21,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   if (Platform.isAndroid || Platform.isIOS) {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.radiaudio.playback',
@@ -294,7 +301,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final supportedMobile = Platform.isAndroid || Platform.isIOS;
     final shouldEnable =
         supportedMobile && _preventAutoSleepDuringPlayback && isPlaying;
-    await WakelockPlus.toggle(enable: shouldEnable);
+    try {
+      await WakelockPlus.toggle(enable: shouldEnable);
+    } catch (_) {
+      // Wakelock channel can be temporarily unavailable during app bootstrap.
+      // Ignore this and keep playback/analysis flow alive.
+    }
   }
 
   /// 現在の再生位置から、次に監視すべき無音トリガー位置を再計算する。
@@ -904,31 +916,130 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _nextSilenceTriggerIndex = 0;
     });
 
-    final silenceStarts = <double>[];
-    final silenceEnds = <double>[];
-    final silenceDurations = <double>[];
-    final startPattern = RegExp(r'silence_start:\s*([0-9]+(?:\.[0-9]+)?)');
     final endPattern = RegExp(
       r'silence_end:\s*([0-9]+(?:\.[0-9]+)?)\s*\|\s*silence_duration:\s*([0-9]+(?:\.[0-9]+)?)',
     );
+    final splitTriggers = <double>[];
+    var termStartSec = 0.0;
+
+    void processSilenceLogLine(String line) {
+      final match = endPattern.firstMatch(line);
+      if (match == null) return;
+      final endRaw = match.group(1);
+      final durationRaw = match.group(2);
+      final silenceEndSec = double.tryParse(endRaw ?? '');
+      final silenceDurationSec = double.tryParse(durationRaw ?? '');
+      if (silenceEndSec == null || silenceDurationSec == null) return;
+      if (!silenceEndSec.isFinite || silenceEndSec <= 0) return;
+
+      final segmentLenSec = silenceEndSec - termStartSec;
+      if (segmentLenSec < _hardMinChapterSec) return;
+
+      final shouldSplit = ((silenceDurationSec > chapterUnitSec &&
+              segmentLenSec > _fixedMinSegmentSecForSilenceSplit) ||
+          segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
+      if (!shouldSplit) return;
+
+      if (splitTriggers.isNotEmpty &&
+          (silenceEndSec - splitTriggers.last).abs() < 0.001) {
+        return;
+      }
+
+      splitTriggers.add(silenceEndSec);
+      termStartSec = silenceEndSec;
+
+      if (!mounted) return;
+      if (_silenceAnalysisPath != audioPath) return;
+      setState(() {
+        _silenceTriggersSec = List<double>.from(splitTriggers);
+      });
+      _syncSilenceTriggerIndexWithPosition(currentPositionSec);
+    }
 
     try {
-      String output = '';
       if (Platform.isWindows) {
         if (!mounted) return;
         setState(() {
           _isPreparingWindowsAnalyzer = true;
         });
+        var windowsProcessSuccess = false;
         final windowsFfmpegPath = await _ensureWindowsBundledFfmpeg();
-        if (windowsFfmpegPath == null) {
-          if (!mounted) return;
-          setState(() {
-            _isPreparingWindowsAnalyzer = false;
-            _isAnalyzingSilence = false;
-          });
-          return;
+        if (windowsFfmpegPath != null) {
+          try {
+            final process = await Process.start(windowsFfmpegPath, [
+              '-hide_banner',
+              '-i',
+              audioPath,
+              '-af',
+              'silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(1)}dB:d=$_silenceDetectWindowSec',
+              '-f',
+              'null',
+              '-',
+            ]);
+
+            final stderrTask = process.stderr
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())
+                .forEach(processSilenceLogLine);
+            final stdoutTask = process.stdout
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())
+                .forEach(processSilenceLogLine);
+
+            await Future.wait([stderrTask, stdoutTask]);
+            await process.exitCode;
+            windowsProcessSuccess = true;
+          } catch (_) {
+            windowsProcessSuccess = false;
+          }
         }
-        final result = await Process.run(windowsFfmpegPath, [
+
+        if (!windowsProcessSuccess) {
+          final args = <String>[
+            '-hide_banner',
+            '-i',
+            audioPath,
+            '-af',
+            'silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(1)}dB:d=$_silenceDetectWindowSec',
+            '-f',
+            'null',
+            '-',
+          ];
+          final session = await FFmpegKit.executeWithArgumentsAsync(
+            args,
+            null,
+            (dynamic log) {
+              final message = log?.getMessage()?.toString() ?? '';
+              if (message.isEmpty) return;
+              processSilenceLogLine(message);
+            },
+          );
+          final returnCode = await session.getReturnCode();
+          if (returnCode != null &&
+              !ReturnCode.isSuccess(returnCode) &&
+              !ReturnCode.isCancel(returnCode) &&
+              splitTriggers.isEmpty) {
+            if (!mounted) return;
+            if (!_notifiedSilenceAnalyzerUnsupported) {
+              _notifiedSilenceAnalyzerUnsupported = true;
+              showQuickSnack(_tr('analysisInitFailed'), milliseconds: 1400);
+            }
+            setState(() {
+              _isPreparingWindowsAnalyzer = false;
+              _isAnalyzingSilence = false;
+            });
+            return;
+          }
+
+          final output = (await session.getAllLogsAsString()) ??
+              (await session.getOutput()) ??
+              '';
+          for (final line in output.split(RegExp(r'\r?\n'))) {
+            processSilenceLogLine(line);
+          }
+        }
+      } else {
+        final args = <String>[
           '-hide_banner',
           '-i',
           audioPath,
@@ -937,44 +1048,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
           '-f',
           'null',
           '-',
-        ]);
-        output = '${result.stderr}\n${result.stdout}';
-      } else {
-        final command =
-          '-hide_banner -i "$audioPath" -af "silencedetect=noise=${_silenceNoiseDb.toStringAsFixed(1)}dB:d=$_silenceDetectWindowSec" -f null -';
-        final session = await FFmpegKit.execute(command);
-        output = (await session.getAllLogsAsString()) ??
-            (await session.getOutput()) ??
-            '';
+        ];
+        final session = await FFmpegKit.executeWithArgumentsAsync(
+          args,
+          null,
+          (dynamic log) {
+            final message = log?.getMessage()?.toString() ?? '';
+            if (message.isEmpty) return;
+            processSilenceLogLine(message);
+          },
+        );
         final returnCode = await session.getReturnCode();
         if (returnCode != null &&
             !ReturnCode.isSuccess(returnCode) &&
-            !ReturnCode.isCancel(returnCode)) {
-          if (output.isEmpty) {
-            if (!mounted) return;
-            setState(() {
-              _isAnalyzingSilence = false;
-            });
-            return;
-          }
+            !ReturnCode.isCancel(returnCode) &&
+            splitTriggers.isEmpty) {
+          if (!mounted) return;
+          setState(() {
+            _isPreparingWindowsAnalyzer = false;
+            _isAnalyzingSilence = false;
+          });
+          return;
         }
-      }
 
-      for (final match in startPattern.allMatches(output)) {
-        final raw = match.group(1);
-        final startSec = double.tryParse(raw ?? '');
-        if (startSec == null) continue;
-        silenceStarts.add(startSec);
-      }
-
-      for (final match in endPattern.allMatches(output)) {
-        final endRaw = match.group(1);
-        final durationRaw = match.group(2);
-        final endSec = double.tryParse(endRaw ?? '');
-        final durationSec = double.tryParse(durationRaw ?? '');
-        if (endSec == null || durationSec == null) continue;
-        silenceEnds.add(endSec);
-        silenceDurations.add(durationSec);
+        // Fallback parse for environments where log callbacks are delayed.
+        final output = (await session.getAllLogsAsString()) ??
+            (await session.getOutput()) ??
+            '';
+        for (final line in output.split(RegExp(r'\r?\n'))) {
+          processSilenceLogLine(line);
+        }
       }
     } catch (_) {
       if (!mounted) return;
@@ -991,34 +1094,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     if (!mounted) return;
     if (_silenceAnalysisPath != audioPath) return;
-    final splitTriggers = <double>[];
-    var termStartSec = 0.0;
-    final intervalCount = math.min(
-      silenceStarts.length,
-      math.min(silenceEnds.length, silenceDurations.length),
-    );
-
-    for (var i = 0; i < intervalCount; i++) {
-      final silenceStartSec = silenceStarts[i];
-      final silenceEndSec = silenceEnds[i];
-      final silenceDurationSec = silenceDurations[i];
-      if (!silenceEndSec.isFinite || silenceEndSec <= 0) continue;
-      if (silenceEndSec <= silenceStartSec) continue;
-      final segmentLenSec = silenceEndSec - termStartSec;
-        if (segmentLenSec < _hardMinChapterSec) continue;
-      final shouldSplit = ((silenceDurationSec > chapterUnitSec &&
-            segmentLenSec > _fixedMinSegmentSecForSilenceSplit) ||
-          segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
-      if (!shouldSplit) continue;
-      splitTriggers.add(silenceEndSec);
-      termStartSec = silenceEndSec;
-    }
-
-    splitTriggers.sort();
     setState(() {
       _isPreparingWindowsAnalyzer = false;
       _isAnalyzingSilence = false;
-      _silenceTriggersSec = splitTriggers;
+      _silenceTriggersSec = List<double>.from(splitTriggers);
       _nextSilenceTriggerIndex = 0;
     });
     _syncSilenceTriggerIndexWithPosition(currentPositionSec);
@@ -1057,14 +1136,48 @@ class _PlayerScreenState extends State<PlayerScreen> {
     try {
       if (Platform.isWindows) {
         final windowsFfmpegPath = await _ensureWindowsBundledFfmpeg();
-        if (windowsFfmpegPath == null) {
-          if (!mounted) return;
-          setState(() {
-            _isAnalyzingWaveform = false;
-          });
-          return;
+        if (windowsFfmpegPath != null) {
+          await Process.run(windowsFfmpegPath, [
+            '-hide_banner',
+            '-i',
+            audioPath,
+            '-vn',
+            '-ac',
+            '1',
+            '-ar',
+            '8000',
+            '-f',
+            's16le',
+            '-y',
+            pcmFile.path,
+          ]);
+        } else {
+          final args = <String>[
+            '-hide_banner',
+            '-i',
+            audioPath,
+            '-vn',
+            '-ac',
+            '1',
+            '-ar',
+            '8000',
+            '-f',
+            's16le',
+            '-y',
+            pcmFile.path,
+          ];
+          final session = await FFmpegKit.executeWithArguments(args);
+          final returnCode = await session.getReturnCode();
+          if (returnCode != null && !ReturnCode.isSuccess(returnCode)) {
+            if (!mounted) return;
+            setState(() {
+              _isAnalyzingWaveform = false;
+            });
+            return;
+          }
         }
-        await Process.run(windowsFfmpegPath, [
+      } else {
+        final args = <String>[
           '-hide_banner',
           '-i',
           audioPath,
@@ -1077,11 +1190,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
           's16le',
           '-y',
           pcmFile.path,
-        ]);
-      } else {
-        final command =
-            '-hide_banner -i "$audioPath" -vn -ac 1 -ar 8000 -f s16le -y "${pcmFile.path}"';
-        final session = await FFmpegKit.execute(command);
+        ];
+        final session = await FFmpegKit.executeWithArguments(args);
         final returnCode = await session.getReturnCode();
         if (returnCode != null && !ReturnCode.isSuccess(returnCode)) {
           if (!mounted) return;
@@ -1216,8 +1326,44 @@ class _PlayerScreenState extends State<PlayerScreen> {
     try {
       if (Platform.isWindows) {
         final windowsFfmpegPath = await _ensureWindowsBundledFfmpeg();
-        if (windowsFfmpegPath == null) return null;
-        await Process.run(windowsFfmpegPath, [
+        if (windowsFfmpegPath != null) {
+          await Process.run(windowsFfmpegPath, [
+            '-hide_banner',
+            '-i',
+            audioPath,
+            '-vn',
+            '-ac',
+            '1',
+            '-ar',
+            '8000',
+            '-f',
+            's16le',
+            '-y',
+            pcmFile.path,
+          ]);
+        } else {
+          final args = <String>[
+            '-hide_banner',
+            '-i',
+            audioPath,
+            '-vn',
+            '-ac',
+            '1',
+            '-ar',
+            '8000',
+            '-f',
+            's16le',
+            '-y',
+            pcmFile.path,
+          ];
+          final session = await FFmpegKit.executeWithArguments(args);
+          final returnCode = await session.getReturnCode();
+          if (returnCode != null && !ReturnCode.isSuccess(returnCode)) {
+            return null;
+          }
+        }
+      } else {
+        final args = <String>[
           '-hide_banner',
           '-i',
           audioPath,
@@ -1230,11 +1376,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
           's16le',
           '-y',
           pcmFile.path,
-        ]);
-      } else {
-        final command =
-            '-hide_banner -i "$audioPath" -vn -ac 1 -ar 8000 -f s16le -y "${pcmFile.path}"';
-        final session = await FFmpegKit.execute(command);
+        ];
+        final session = await FFmpegKit.executeWithArguments(args);
         final returnCode = await session.getReturnCode();
         if (returnCode != null && !ReturnCode.isSuccess(returnCode)) {
           return null;
@@ -1499,7 +1642,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(_tr('settings')),
+                  Expanded(
+                    child: Text(
+                      _tr('settings'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   IconButton(
                     tooltip: _tr('closeSettings'),
                     onPressed: () => Navigator.pop(context),
@@ -1512,32 +1661,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(_tr('language')),
-                        DropdownButton<String>(
-                          value: tempLanguageCode,
-                          onChanged: (value) {
-                            if (value == null) return;
-                            dialogSetState(() {
-                              tempLanguageCode = value;
-                            });
-                            if (!mounted) return;
-                            setState(() {
-                              selectedLanguageCode = value;
-                            });
-                            unawaited(_saveLanguagePreference(value));
-                          },
-                          items: supportedLanguageCodes
-                              .map(
-                                (code) => DropdownMenuItem<String>(
-                                  value: code,
-                                  child: Text(
-                                    languageDisplayNames[code] ?? code,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: tempLanguageCode,
+                            onChanged: (value) {
+                              if (value == null) return;
+                              dialogSetState(() {
+                                tempLanguageCode = value;
+                              });
+                              if (!mounted) return;
+                              setState(() {
+                                selectedLanguageCode = value;
+                              });
+                              unawaited(_saveLanguagePreference(value));
+                            },
+                            items: supportedLanguageCodes
+                                .map(
+                                  (code) => DropdownMenuItem<String>(
+                                    value: code,
+                                    child: Text(
+                                      languageDisplayNames[code] ?? code,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              )
-                              .toList(growable: false),
+                                )
+                                .toList(growable: false),
+                          ),
                         ),
                       ],
                     ),
@@ -2112,6 +2266,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 return GestureDetector(
                                   behavior: HitTestBehavior.opaque,
                                   onTapDown: (details) {
+                                    unawaited(
+                                      _registerAdOpportunity(
+                                        source: 'seekbar_tap',
+                                        allowWhilePlaying: true,
+                                      ),
+                                    );
                                     _previewSeekFromLocalPosition(
                                       localPosition: details.localPosition,
                                       size: barSize,
@@ -2174,13 +2334,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 final isMusicBar =
                                                     _isInMusicInterval(barSec);
                                                 final double renderedHeight =
-                                                  hasWaveform
-                                                    ? (waveformLevel >= 0
-                                                      ? 4.0 +
-                                                        (waveformLevel *
-                                                          41.0)
-                                                      : 0.0)
-                                                    : 0.0;
+                                                    hasWaveform
+                                                        ? (waveformLevel >= 0
+                                                            ? 4.0 +
+                                                                (waveformLevel *
+                                                                    41.0)
+                                                            : 0.0)
+                                                    : (currentFilePath == null
+                                                      ? 45.0
+                                                      : 3.0);
                                                 final isPlayed =
                                                     barSec <= seekProgressSec;
                                                 final chapterIndex =
@@ -2283,12 +2445,24 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ),
                     Expanded(
                       flex: 50,
-                      child: Text(
-                        "$currentIndex/$totalCount    "
-                        "${formatTime(currentPositionSec)}/${formatTime(totalDurationSec)}    "
-                        "${_tr('volumeLabel', {'value': '$volumeLevel'})}",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 18),
+                      child: SizedBox(
+                        height: 60,
+                        child: Center(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "${formatTime(currentPositionSec)}/${formatTime(totalDurationSec)}",
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     Expanded(
@@ -2314,7 +2488,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 height: 22,
                 child: ValueListenableBuilder<String>(
                   valueListenable: _statusMessage,
-                  builder: (context, message, _) {
+                  builder: (context, _, __) {
                     if (currentFilePath == null) {
                       return Text(
                         _tr('pleaseSelectAudioFile'),
@@ -2345,34 +2519,62 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       'total': '$chapterCount',
                                     },
                                   )));
-                    final displayMessage = message.isEmpty
-                        ? silenceInfo
-                        : '$silenceInfo  $message';
                     final currentChapterColor = _chapterColorForIndex(
                       currentChapter - 1,
                       true,
                     );
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: currentChapterColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                    final compactFileInfo = _tr(
+                      'fileIndexInFolder',
+                      {
+                        'current': '$currentIndex',
+                        'total': '$totalCount',
+                      },
+                    );
+                    final compactVolumeInfo = _tr(
+                      'volumeWithValue',
+                      {'value': '$volumeLevel'},
+                    );
+                    return Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              compactFileInfo,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: currentChapterColor,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              silenceInfo,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              compactVolumeInfo,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          displayMessage,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
+                      ),
                     );
                   },
                 ),

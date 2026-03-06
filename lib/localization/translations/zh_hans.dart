@@ -46,7 +46,24 @@ const Map<String, String> zhHansText = {
   'playActionFailed': '播放操作失败',
   'speedTooltip': '+0.25x (长按: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS 不支持默认文件夹',
+
+  'preventAutoSleepDuringPlaybackTitle': '播放时防止自动休眠',
+  'preventAutoSleepDuringPlaybackSubtitle': '仅在音频播放时保持屏幕常亮',
+  'premiumEnabled': '已启用高级版，广告现已关闭。',
+  'premiumDisabled': '已关闭高级版，广告可能再次出现。',
+  'rewardUnlocked24h': '奖励已解锁：24 小时无广告。',
+  'premiumNoAdsTitle': '高级版（无广告）',
+  'premiumNoAdsSubtitle': '当前为模拟许可证开关',
+  'adFreeUntil': '无广告截止到：{until}',
+  'adFreeRewardInactive': '无广告奖励未激活',
+  'watchRewardAdLabel': '观看激励广告（模拟）-> 24 小时无广告',
+  'chapterSplitSilenceLabel': '当静音达到此时长时分割章节',
+  'chapterSkipOn': '章节 {chapter} 跳过 开',
+  'chapterSkipOff': '章节 {chapter} 跳过 关',
+  'settingsSaved': '设置已保存',
+  'interstitialAdPlaceholder': '插页广告占位符（{source}）',
+  'closeAd': '关闭广告',
+  'adLabel': '广告',
+  'bannerAdPlaceholder': '横幅广告占位符',
+  'fileIndexInFolder': '文件夹内 {current}/{total}',
 };
-
-
-

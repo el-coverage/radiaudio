@@ -46,7 +46,24 @@ const Map<String, String> koText = {
   'playActionFailed': '재생 동작에 실패했습니다',
   'speedTooltip': '+0.25x (길게 누르기: -0.25x)',
   'iosDefaultFolderUnsupported': 'iOS에서는 기본 폴더를 지원하지 않습니다',
+
+  'preventAutoSleepDuringPlaybackTitle': '재생 중 자동 절전 방지',
+  'preventAutoSleepDuringPlaybackSubtitle': '오디오가 재생되는 동안에만 화면을 켭니다',
+  'premiumEnabled': '프리미엄이 활성화되었습니다. 광고가 비활성화됩니다.',
+  'premiumDisabled': '프리미엄이 비활성화되었습니다. 광고가 다시 표시될 수 있습니다.',
+  'rewardUnlocked24h': '보상 활성화: 24시간 광고 없음.',
+  'premiumNoAdsTitle': '프리미엄 (광고 없음)',
+  'premiumNoAdsSubtitle': '현재는 모의 라이선스 전환입니다',
+  'adFreeUntil': '광고 없음 만료: {until}',
+  'adFreeRewardInactive': '광고 제거 보상이 비활성 상태입니다',
+  'watchRewardAdLabel': '보상형 광고 보기 (시뮬레이션) -> 24시간 광고 없음',
+  'chapterSplitSilenceLabel': '무음이 이 길이에 도달하면 챕터 분할',
+  'chapterSkipOn': '챕터 {chapter} 건너뛰기 켜짐',
+  'chapterSkipOff': '챕터 {chapter} 건너뛰기 꺼짐',
+  'settingsSaved': '설정이 저장되었습니다',
+  'interstitialAdPlaceholder': '전면 광고 자리표시자 ({source})',
+  'closeAd': '광고 닫기',
+  'adLabel': '광고',
+  'bannerAdPlaceholder': '배너 광고 자리표시자',
+  'fileIndexInFolder': '폴더 내 {current}/{total}',
 };
-
-
-

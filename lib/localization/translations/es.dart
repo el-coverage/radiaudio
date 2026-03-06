@@ -46,7 +46,24 @@ const Map<String, String> esText = {
   'playActionFailed': 'Fallo en la accion de reproduccion',
   'speedTooltip': '+0.25x (Mantener: -0.25x)',
   'iosDefaultFolderUnsupported': 'La carpeta predeterminada no es compatible en iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Evitar suspension automatica durante la reproduccion',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Mantener la pantalla activa solo mientras se reproduce audio',
+  'premiumEnabled': 'Premium activado. Los anuncios ahora estan desactivados.',
+  'premiumDisabled': 'Premium desactivado. Los anuncios pueden volver a aparecer.',
+  'rewardUnlocked24h': 'Recompensa activada: sin anuncios por 24 horas.',
+  'premiumNoAdsTitle': 'Premium (Sin anuncios)',
+  'premiumNoAdsSubtitle': 'Interruptor de licencia simulado por ahora',
+  'adFreeUntil': 'Sin anuncios hasta: {until}',
+  'adFreeRewardInactive': 'La recompensa sin anuncios no esta activa',
+  'watchRewardAdLabel': 'Ver anuncio de recompensa (simulacion) -> 24h sin anuncios',
+  'chapterSplitSilenceLabel': 'Dividir capitulos cuando el silencio alcance esta duracion',
+  'chapterSkipOn': 'Saltar capitulo {chapter} ACTIVADO',
+  'chapterSkipOff': 'Saltar capitulo {chapter} DESACTIVADO',
+  'settingsSaved': 'Configuracion guardada',
+  'interstitialAdPlaceholder': 'Marcador de posicion de anuncio intersticial ({source})',
+  'closeAd': 'Cerrar anuncio',
+  'adLabel': 'Anuncio',
+  'bannerAdPlaceholder': 'Marcador de posicion de anuncio de banner',
+  'fileIndexInFolder': 'En la carpeta {current}/{total}',
 };
-
-
-

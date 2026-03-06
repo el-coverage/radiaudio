@@ -46,7 +46,24 @@ const Map<String, String> ptBrText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Evitar suspensao automatica durante a reproducao',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Manter a tela ativa somente enquanto o audio estiver tocando',
+  'premiumEnabled': 'Premium ativado. Os anuncios agora estao desativados.',
+  'premiumDisabled': 'Premium desativado. Os anuncios podem voltar a aparecer.',
+  'rewardUnlocked24h': 'Recompensa ativada: sem anuncios por 24 horas.',
+  'premiumNoAdsTitle': 'Premium (Sem anuncios)',
+  'premiumNoAdsSubtitle': 'Alternancia de licenca simulada por enquanto',
+  'adFreeUntil': 'Sem anuncios ate: {until}',
+  'adFreeRewardInactive': 'Recompensa sem anuncios inativa',
+  'watchRewardAdLabel': 'Ver anuncio recompensado (simulacao) -> 24h sem anuncios',
+  'chapterSplitSilenceLabel': 'Dividir capitulos quando o silencio atingir esta duracao',
+  'chapterSkipOn': 'Pular capitulo {chapter} LIGADO',
+  'chapterSkipOff': 'Pular capitulo {chapter} DESLIGADO',
+  'settingsSaved': 'Configuracoes salvas',
+  'interstitialAdPlaceholder': 'Espaco reservado de anuncio intersticial ({source})',
+  'closeAd': 'Fechar anuncio',
+  'adLabel': 'Anuncio',
+  'bannerAdPlaceholder': 'Espaco reservado de anuncio em banner',
+  'fileIndexInFolder': 'Na pasta {current}/{total}',
 };
-
-
-

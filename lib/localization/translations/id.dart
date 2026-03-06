@@ -46,7 +46,24 @@ const Map<String, String> idText = {
   'playActionFailed': 'Playback action failed',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Default folder is not supported on iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Cegah tidur otomatis saat pemutaran',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Jaga layar tetap menyala hanya saat audio diputar',
+  'premiumEnabled': 'Premium aktif. Iklan sekarang dinonaktifkan.',
+  'premiumDisabled': 'Premium nonaktif. Iklan mungkin muncul lagi.',
+  'rewardUnlocked24h': 'Hadiah aktif: bebas iklan selama 24 jam.',
+  'premiumNoAdsTitle': 'Premium (Tanpa Iklan)',
+  'premiumNoAdsSubtitle': 'Saklar lisensi simulasi untuk saat ini',
+  'adFreeUntil': 'Bebas iklan sampai: {until}',
+  'adFreeRewardInactive': 'Hadiah bebas iklan tidak aktif',
+  'watchRewardAdLabel': 'Tonton iklan hadiah (simulasi) -> 24 jam tanpa iklan',
+  'chapterSplitSilenceLabel': 'Bagi bab saat hening mencapai durasi ini',
+  'chapterSkipOn': 'Lewati bab {chapter} AKTIF',
+  'chapterSkipOff': 'Lewati bab {chapter} NONAKTIF',
+  'settingsSaved': 'Pengaturan disimpan',
+  'interstitialAdPlaceholder': 'Placeholder iklan interstisial ({source})',
+  'closeAd': 'Tutup iklan',
+  'adLabel': 'Iklan',
+  'bannerAdPlaceholder': 'Placeholder iklan banner',
+  'fileIndexInFolder': 'Dalam folder {current}/{total}',
 };
-
-
-

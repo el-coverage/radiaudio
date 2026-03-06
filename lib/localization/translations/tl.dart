@@ -46,7 +46,24 @@ const Map<String, String> tlText = {
   'playActionFailed': 'Nabigo ang playback action',
   'speedTooltip': '+0.25x (Long press: -0.25x)',
   'iosDefaultFolderUnsupported': 'Hindi suportado ang default folder sa iOS',
+
+  'preventAutoSleepDuringPlaybackTitle': 'Pigilan ang auto sleep habang nagpapatugtog',
+  'preventAutoSleepDuringPlaybackSubtitle': 'Panatilihing gising ang screen habang may audio lang',
+  'premiumEnabled': 'Naka-enable ang Premium. Naka-off na ang mga ad.',
+  'premiumDisabled': 'Naka-disable ang Premium. Maaaring lumabas muli ang mga ad.',
+  'rewardUnlocked24h': 'Naka-unlock ang reward: walang ad sa loob ng 24 oras.',
+  'premiumNoAdsTitle': 'Premium (Walang Ads)',
+  'premiumNoAdsSubtitle': 'Simulated license switch muna sa ngayon',
+  'adFreeUntil': 'Walang ad hanggang: {until}',
+  'adFreeRewardInactive': 'Hindi aktibo ang ad-free reward',
+  'watchRewardAdLabel': 'Manood ng reward ad (simulate) -> 24h walang ads',
+  'chapterSplitSilenceLabel': 'Hatiin ang mga kabanata kapag umabot sa tagal na ito ang katahimikan',
+  'chapterSkipOn': 'Laktawan ang kabanata {chapter} NAKA-ON',
+  'chapterSkipOff': 'Laktawan ang kabanata {chapter} NAKA-OFF',
+  'settingsSaved': 'Nai-save ang mga setting',
+  'interstitialAdPlaceholder': 'Placeholder ng interstitial ad ({source})',
+  'closeAd': 'Isara ang ad',
+  'adLabel': 'Ad',
+  'bannerAdPlaceholder': 'Placeholder ng banner ad',
+  'fileIndexInFolder': 'Sa folder {current}/{total}',
 };
-
-
-

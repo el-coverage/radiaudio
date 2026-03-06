@@ -41,6 +41,7 @@ dependencies:
   # 💾 軽量な設定保存（キー・バリュー）
   shared_preferences: ^2.3.2
   ffmpeg_helper: ^1.0.1
+  ffmpeg_kit_flutter_new: ^4.1.0
   package_info_plus: ^4.2.0
   path: ^1.9.1
   path_provider: ^2.1.5
