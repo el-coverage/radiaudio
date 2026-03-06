@@ -45,8 +45,8 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _SilenceInterval {
-  const _SilenceInterval({required this.startSec, required this.endSec});
+class _MusicInterval {
+  const _MusicInterval({required this.startSec, required this.endSec});
 
   final double startSec;
   final double endSec;
@@ -92,6 +92,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const double _fixedMaxSegmentSecWithoutSplit = 24.0;
   static const double _hardMinChapterSec = 8.0;
   static const double _silenceDetectWindowSec = 0.01;
+  static const double _musicWindowSec = 8.0;
+  static const double _musicHopSec = 4.0;
+  static const double _musicMinIntervalSec = 12.0;
   static const int _minVolumeLevel = 0;
   static const int _maxVolumeLevel = 20;
   static const int _interstitialEveryOpportunities = 6;
@@ -106,7 +109,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     'opus',
   };
   List<double> _silenceTriggersSec = [];
-  List<_SilenceInterval> _silenceIntervals = [];
+  List<_MusicInterval> _musicIntervals = [];
   Set<int> _skipTargetChapters = <int>{};
   bool _isAutoSkippingChapter = false;
   int _nextSilenceTriggerIndex = 0;
@@ -773,7 +776,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _isAnalyzingSilence = false;
         _silenceAnalysisPath = audioPath;
         _silenceTriggersSec = [];
-        _silenceIntervals = [];
         _nextSilenceTriggerIndex = 0;
       });
       return;
@@ -784,7 +786,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _isAnalyzingSilence = true;
       _silenceAnalysisPath = audioPath;
       _silenceTriggersSec = [];
-      _silenceIntervals = [];
       _nextSilenceTriggerIndex = 0;
     });
 
@@ -876,7 +877,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (!mounted) return;
     if (_silenceAnalysisPath != audioPath) return;
     final splitTriggers = <double>[];
-    final silenceIntervals = <_SilenceInterval>[];
     var termStartSec = 0.0;
     final intervalCount = math.min(
       silenceStarts.length,
@@ -896,9 +896,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
           segmentLenSec > _fixedMaxSegmentSecWithoutSplit);
       if (!shouldSplit) continue;
       splitTriggers.add(silenceEndSec);
-      silenceIntervals.add(
-        _SilenceInterval(startSec: silenceStartSec, endSec: silenceEndSec),
-      );
       termStartSec = silenceEndSec;
     }
 
@@ -907,11 +904,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _isPreparingWindowsAnalyzer = false;
       _isAnalyzingSilence = false;
       _silenceTriggersSec = splitTriggers;
-      _silenceIntervals = silenceIntervals;
       _nextSilenceTriggerIndex = 0;
     });
     _syncSilenceTriggerIndexWithPosition(currentPositionSec);
     unawaited(_loadSkipTargetsForCurrentTrack());
+    unawaited(
+      _analyzeMusicSegmentsForSeekbar(
+        audioPath: audioPath,
+      ),
+    );
   }
 
   /// 読み込みファイルを対象に波形振幅を解析し、シークバー高さ用のデータを生成する。
@@ -1061,14 +1062,228 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return _waveformLevels[mappedIndex];
   }
 
-  /// 指定秒数が無音区間内なら true を返す。
-  bool _isInSilenceInterval(double sec) {
-    for (final interval in _silenceIntervals) {
+  /// 指定秒数が音楽区間内なら true を返す。
+  bool _isInMusicInterval(double sec) {
+    for (final interval in _musicIntervals) {
       if (sec >= interval.startSec && sec <= interval.endSec) {
         return true;
       }
     }
     return false;
+  }
+
+  /// 無音で分割した各区間を解析し、音楽らしい区間を抽出する。
+  Future<void> _analyzeMusicSegmentsForSeekbar({
+    required String audioPath,
+  }) async {
+    final pcmBytes = await _decodeToPcmMono8000(audioPath);
+    if (pcmBytes == null || pcmBytes.isEmpty) return;
+    if (!mounted) return;
+    if (_silenceAnalysisPath != audioPath) return;
+
+    final musicIntervals = _detectMusicIntervalsFromPcm(
+      pcmBytes: pcmBytes,
+    );
+
+    if (!mounted) return;
+    if (_silenceAnalysisPath != audioPath) return;
+    setState(() {
+      _musicIntervals = musicIntervals;
+    });
+  }
+
+  /// 音声を 8kHz モノラル PCM に変換し、バイト列を返す。
+  Future<Uint8List?> _decodeToPcmMono8000(String audioPath) async {
+    final pcmFile = File(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}radiaudio_music_${audioPath.hashCode.abs()}.pcm',
+    );
+
+    try {
+      if (Platform.isWindows) {
+        final windowsFfmpegPath = await _ensureWindowsBundledFfmpeg();
+        if (windowsFfmpegPath == null) return null;
+        await Process.run(windowsFfmpegPath, [
+          '-hide_banner',
+          '-i',
+          audioPath,
+          '-vn',
+          '-ac',
+          '1',
+          '-ar',
+          '8000',
+          '-f',
+          's16le',
+          '-y',
+          pcmFile.path,
+        ]);
+      } else {
+        final command =
+            '-hide_banner -i "$audioPath" -vn -ac 1 -ar 8000 -f s16le -y "${pcmFile.path}"';
+        final session = await FFmpegKit.execute(command);
+        final returnCode = await session.getReturnCode();
+        if (returnCode != null && !ReturnCode.isSuccess(returnCode)) {
+          return null;
+        }
+      }
+
+      if (!await pcmFile.exists()) return null;
+      return await pcmFile.readAsBytes();
+    } catch (_) {
+      return null;
+    } finally {
+      if (await pcmFile.exists()) {
+        await pcmFile.delete();
+      }
+    }
+  }
+
+  List<_MusicInterval> _detectMusicIntervalsFromPcm({
+    required Uint8List pcmBytes,
+  }) {
+    const sampleRate = 8000.0;
+    final totalSamples = pcmBytes.length ~/ 2;
+    if (totalSamples <= 0) return const [];
+
+    final durationFromPcm = totalSamples / sampleRate;
+    final resolvedDurationSec = math.max(totalDurationSec, durationFromPcm);
+    if (resolvedDurationSec <= 0) return const [];
+
+    final data = ByteData.sublistView(pcmBytes);
+    final windows = <({double start, double end, bool music})>[];
+
+    var startSec = 0.0;
+    while (startSec < resolvedDurationSec) {
+      final endSec = math.min(startSec + _musicWindowSec, resolvedDurationSec);
+      final durationSec = endSec - startSec;
+      if (durationSec < 2.0) break;
+
+      final startSample = (startSec * sampleRate).floor().clamp(0, totalSamples);
+      final endSample = (endSec * sampleRate).floor().clamp(0, totalSamples);
+      if (endSample - startSample < (sampleRate * 2).floor()) {
+        startSec += _musicHopSec;
+        continue;
+      }
+
+      final isMusic = _isLikelyMusicFromSamples(
+        data: data,
+        startSample: startSample,
+        endSample: endSample,
+        durationSec: durationSec,
+      );
+      windows.add((start: startSec, end: endSec, music: isMusic));
+      startSec += _musicHopSec;
+    }
+
+    if (windows.isEmpty) return const [];
+
+    final merged = <_MusicInterval>[];
+    double? currentStart;
+    double? currentEnd;
+
+    for (final w in windows) {
+      if (!w.music) {
+        if (currentStart != null && currentEnd != null) {
+          final len = currentEnd - currentStart;
+          if (len >= _musicMinIntervalSec) {
+            merged.add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
+          }
+        }
+        currentStart = null;
+        currentEnd = null;
+        continue;
+      }
+
+      if (currentStart == null) {
+        currentStart = w.start;
+        currentEnd = w.end;
+        continue;
+      }
+
+      if (w.start <= currentEnd! + 0.8) {
+        currentEnd = math.max(currentEnd, w.end);
+      } else {
+        final len = currentEnd - currentStart;
+        if (len >= _musicMinIntervalSec) {
+          merged.add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
+        }
+        currentStart = w.start;
+        currentEnd = w.end;
+      }
+    }
+
+    if (currentStart != null && currentEnd != null) {
+      final len = currentEnd - currentStart;
+      if (len >= _musicMinIntervalSec) {
+        merged.add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
+      }
+    }
+
+    return merged;
+  }
+
+  /// 軽量特徴量で音楽らしさを判定する（将来的にMLモデルへ置換しやすい形）。
+  bool _isLikelyMusicFromSamples({
+    required ByteData data,
+    required int startSample,
+    required int endSample,
+    required double durationSec,
+  }) {
+    final sampleCount = endSample - startSample;
+    if (sampleCount <= 1) return false;
+
+    const targetPoints = 160000;
+    final step = sampleCount > targetPoints ? (sampleCount ~/ targetPoints) : 1;
+
+    var crossings = 0;
+    var active = 0;
+    var count = 0;
+    var sumSq = 0.0;
+    var prevSample = data.getInt16(startSample * 2, Endian.little);
+
+    for (var i = startSample; i < endSample; i += step) {
+      final sample = data.getInt16(i * 2, Endian.little);
+      final absSample = sample.abs();
+      if ((sample >= 0) != (prevSample >= 0)) {
+        crossings++;
+      }
+      if (absSample >= 655) {
+        active++;
+      }
+      sumSq += sample * sample;
+      count++;
+      prevSample = sample;
+    }
+
+    if (count <= 1) return false;
+
+    final rms = math.sqrt(sumSq / count) / 32768.0;
+    final activeRatio = active / count;
+    final zcr = crossings / (count - 1);
+
+    var score = 0.0;
+    if (rms >= 0.05) {
+      score += 1.0;
+    } else if (rms < 0.02) {
+      score -= 1.0;
+    }
+
+    if (activeRatio >= 0.78) {
+      score += 1.0;
+    } else if (activeRatio < 0.55) {
+      score -= 1.0;
+    }
+
+    if (zcr >= 0.025 && zcr <= 0.16) {
+      score += 0.5;
+    } else if (zcr < 0.01 || zcr > 0.22) {
+      score -= 0.5;
+    }
+
+    if (durationSec >= 20.0) {
+      score += 0.5;
+    }
+
+    return score >= 1.5;
   }
 
   /// Windows用の同梱FFmpegを準備し、実行可能パスを返す。
@@ -1113,6 +1328,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (!mounted) return;
     setState(() {
       _skipTargetChapters = <int>{};
+      _musicIntervals = [];
     });
 
     try {
@@ -1825,18 +2041,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 );
                                                 final barSec =
                                                     (flatIndex + 1) * secPerBar;
-                                                final isSilentBar =
-                                                  _isInSilenceInterval(barSec);
+                                                final isMusicBar =
+                                                    _isInMusicInterval(barSec);
                                                 final double renderedHeight =
-                                                  isSilentBar
-                                                    ? 0.0
-                                                    : hasWaveform
-                                                        ? (waveformLevel >= 0
-                                                            ? 4.0 +
-                                                                (waveformLevel *
-                                                                    41.0)
-                                                            : 0.0)
-                                                        : 0.0;
+                                                  hasWaveform
+                                                    ? (waveformLevel >= 0
+                                                      ? 4.0 +
+                                                        (waveformLevel *
+                                                          41.0)
+                                                      : 0.0)
+                                                    : 0.0;
                                                 final isPlayed =
                                                     barSec <= seekProgressSec;
                                                 final chapterIndex =
@@ -1844,6 +2058,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 final isSkipTarget =
                                                   _skipTargetChapters.contains(
                                                     chapterIndex);
+                                                final displayedBarColor =
+                                                    isSkipTarget
+                                                        ? Colors.black
+                                                        : (_isAnalyzingSilence
+                                                            ? (isPlayed
+                                                                ? _chapterColorForIndex(
+                                                                    chapterIndex,
+                                                                    true,
+                                                                  )
+                                                                : Colors.blueGrey
+                                                                    .shade300)
+                                                            : _chapterColorForIndex(
+                                                                chapterIndex,
+                                                                isPlayed,
+                                                              ));
 
                                                 return Expanded(
                                                   child: Container(
@@ -1851,24 +2080,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                         .symmetric(
                                                       horizontal: 1,
                                                     ),
-                                                    alignment:
-                                                        Alignment.bottomCenter,
-                                                    child: Container(
-                                                      height: renderedHeight,
-                                                      color: isSkipTarget
-                                                        ? Colors.black
-                                                        : _isAnalyzingSilence
-                                                          ? (isPlayed
-                                                              ? _chapterColorForIndex(
-                                                                  chapterIndex,
-                                                                  true,
-                                                                )
-                                                              : Colors.blueGrey
-                                                                  .shade300)
-                                                          : _chapterColorForIndex(
-                                                              chapterIndex,
-                                                              isPlayed,
+                                                    child: Stack(
+                                                      fit: StackFit.expand,
+                                                      children: [
+                                                        Align(
+                                                          alignment: Alignment.bottomCenter,
+                                                          child: Container(
+                                                            height: renderedHeight,
+                                                            color: displayedBarColor,
+                                                          ),
+                                                        ),
+                                                        if (isMusicBar && renderedHeight > 0)
+                                                          Align(
+                                                            alignment: Alignment.center,
+                                                            child: Container(
+                                                              width: double.infinity,
+                                                              height: 5.0,
+                                                              color: Colors.black,
                                                             ),
+                                                          ),
+                                                      ],
                                                     ),
                                                   ),
                                                 );
@@ -1987,10 +2218,31 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     final displayMessage = message.isEmpty
                         ? silenceInfo
                         : '$silenceInfo  $message';
-                    return Text(
-                      displayMessage,
-                      style:
-                          const TextStyle(fontSize: 16, color: Colors.black54),
+                    final currentChapterColor = _chapterColorForIndex(
+                      currentChapter - 1,
+                      true,
+                    );
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: currentChapterColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          displayMessage,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
