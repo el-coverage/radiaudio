@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:ffmpeg_helper/ffmpeg_helper.dart';
@@ -52,6 +53,61 @@ class _MusicInterval {
   final double endSec;
 }
 
+/// プレミアム課金状態を取得・更新するための差し替え可能な抽象ゲートウェイ。
+abstract class PremiumBillingGateway {
+  ValueListenable<bool> get isPremiumListenable;
+
+  Future<void> initialize();
+
+  Future<void> purchasePremium();
+
+  Future<void> restorePurchases();
+
+  Future<void> debugSetPremium(bool premium);
+
+  Future<void> dispose();
+}
+
+/// ストア課金未導入時に使うモック実装。
+class MockPremiumBillingGateway implements PremiumBillingGateway {
+  MockPremiumBillingGateway({required this.prefKey});
+
+  final String prefKey;
+  final ValueNotifier<bool> _isPremium = ValueNotifier<bool>(false);
+
+  @override
+  ValueListenable<bool> get isPremiumListenable => _isPremium;
+
+  @override
+  Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isPremium.value = prefs.getBool(prefKey) ?? false;
+  }
+
+  @override
+  Future<void> purchasePremium() async {
+    await debugSetPremium(true);
+  }
+
+  @override
+  Future<void> restorePurchases() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isPremium.value = prefs.getBool(prefKey) ?? false;
+  }
+
+  @override
+  Future<void> debugSetPremium(bool premium) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(prefKey, premium);
+    _isPremium.value = premium;
+  }
+
+  @override
+  Future<void> dispose() async {
+    _isPremium.dispose();
+  }
+}
+
 class _PlayerScreenState extends State<PlayerScreen> {
   String currentTitle = '';
 
@@ -99,6 +155,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   static const int _maxVolumeLevel = 20;
   static const int _interstitialEveryOpportunities = 6;
   static const Duration _interstitialCooldown = Duration(minutes: 15);
+  static const Duration _chapterSkipAdOpportunityMinInterval = Duration(
+    minutes: 2,
+  );
   static const Set<String> _audioExtensions = {
     'mp3',
     'wav',
@@ -130,6 +189,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   DateTime? _adsDisabledUntil;
   int _adOpportunityCount = 0;
   DateTime? _lastInterstitialAt;
+  DateTime? _lastChapterSkipAdOpportunityAt;
+  late final PremiumBillingGateway _premiumBilling =
+      _createPremiumBillingGateway();
+  VoidCallback? _premiumStateListener;
 
   bool get _isAdFree {
     if (_isPremiumUser) return true;
@@ -141,6 +204,46 @@ class _PlayerScreenState extends State<PlayerScreen> {
   /// 選択中言語の文字列を返す。未定義の言語は英語へフォールバックする。
   String _tr(String key, [Map<String, String> params = const {}]) {
     return tr(selectedLanguageCode, key, params);
+  }
+
+  bool get _usesMockPremiumBilling => _premiumBilling is MockPremiumBillingGateway;
+
+  PremiumBillingGateway _createPremiumBillingGateway() {
+    // TODO: Store product is ready, replace with App Store / Play billing gateway.
+    return MockPremiumBillingGateway(prefKey: _prefIsPremiumUser);
+  }
+
+  Future<void> _initializePremiumBilling() async {
+    await _premiumBilling.initialize();
+    _premiumStateListener = () {
+      if (!mounted) return;
+      final premium = _premiumBilling.isPremiumListenable.value;
+      setState(() {
+        _isPremiumUser = premium;
+        if (premium) {
+          _adsDisabledUntil = null;
+        }
+      });
+    };
+    _premiumBilling.isPremiumListenable.addListener(_premiumStateListener!);
+    _premiumStateListener!();
+  }
+
+  Future<void> _togglePremiumForCurrentSetup(bool premium) async {
+    if (_usesMockPremiumBilling) {
+      await _premiumBilling.debugSetPremium(premium);
+    } else if (premium) {
+      await _premiumBilling.purchasePremium();
+    }
+    if (!mounted) return;
+    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'), milliseconds: 1200);
+  }
+
+  Future<void> _restorePremiumPurchases() async {
+    await _premiumBilling.restorePurchases();
+    if (!mounted) return;
+    final premium = _premiumBilling.isPremiumListenable.value;
+    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'), milliseconds: 1200);
   }
 
   /// 無音自動チャプター解析が利用可能なプラットフォームかを返す。
@@ -360,6 +463,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   /// ストリーム購読を初期化し、再生位置・再生状態をUIへ反映する。
   void initState() {
     super.initState();
+    unawaited(_initializePremiumBilling());
     loadPreferences();
     _player.positionStream.listen((position) {
       if (!mounted) return;
@@ -461,21 +565,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _setPremiumStatus(bool premium) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _isPremiumUser = premium;
-      if (premium) {
-        _adsDisabledUntil = null;
-      }
-    });
-    await prefs.setBool(_prefIsPremiumUser, premium);
-    if (premium) {
-      await prefs.remove(_prefAdsDisabledUntilIso);
-      showQuickSnack(_tr('premiumEnabled'), milliseconds: 1200);
-    } else {
-      showQuickSnack(_tr('premiumDisabled'), milliseconds: 1200);
-    }
+    await _togglePremiumForCurrentSetup(premium);
   }
 
   Future<void> _grantRewardAdFree(Duration duration) async {
@@ -490,9 +580,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     showQuickSnack(_tr('rewardUnlocked24h'), milliseconds: 1200);
   }
 
-  Future<void> _registerAdOpportunity({required String source}) async {
+  Future<void> _registerAdOpportunity({
+    required String source,
+    bool allowWhilePlaying = false,
+  }) async {
     if (_isAdFree) return;
-    if (isPlaying) return;
+    if (isPlaying && !allowWhilePlaying) return;
 
     final now = DateTime.now();
     final prefs = await SharedPreferences.getInstance();
@@ -557,6 +650,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
         );
       },
+    );
+  }
+
+  /// 次チャプタースキップ由来の広告機会を、一定間隔でのみ登録する。
+  Future<void> _registerChapterSkipAdOpportunity() async {
+    final now = DateTime.now();
+    final last = _lastChapterSkipAdOpportunityAt;
+    if (last != null &&
+        now.difference(last) < _chapterSkipAdOpportunityMinInterval) {
+      return;
+    }
+    _lastChapterSkipAdOpportunityAt = now;
+    await _registerAdOpportunity(
+      source: 'skip_chapter',
+      allowWhilePlaying: true,
     );
   }
 
@@ -676,6 +784,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     await _player.seek(
       Duration(milliseconds: (resolvedTargetSec * 1000).toInt()),
     );
+    if (forward) {
+      unawaited(_registerChapterSkipAdOpportunity());
+    }
     final chapterMessage = forward
         ? _tr('nextChapter')
         : (backwardSteps >= 2 ? _tr('prevPrevChapter') : _tr('prevChapter'));
@@ -755,6 +866,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   /// 保持しているリソースを解放する。
   void dispose() {
+    if (_premiumStateListener != null) {
+      _premiumBilling.isPremiumListenable.removeListener(_premiumStateListener!);
+    }
+    unawaited(_premiumBilling.dispose());
     unawaited(WakelockPlus.disable());
     _statusMessage.dispose();
     _player.dispose();
@@ -1599,6 +1714,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         });
                       },
                     ),
+                    if (!_usesMockPremiumBilling)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            await _restorePremiumPurchases();
+                            dialogSetState(() {
+                              tempPremium = _isPremiumUser;
+                              tempAdsDisabledUntil = _adsDisabledUntil;
+                            });
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Restore purchases'),
+                        ),
+                      ),
                     if (!tempPremium)
                       Align(
                         alignment: Alignment.centerLeft,
