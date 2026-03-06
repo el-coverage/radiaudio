@@ -61,6 +61,7 @@ const Map<String, String> viText = {
   'chapterSplitSilenceLabel': 'Tach cac chuong khi khoang lang dat thoi luong nay',
   'chapterSkipOn': 'Bo qua chuong {chapter} BAT',
   'chapterSkipOff': 'Bo qua chuong {chapter} TAT',
+  'premiumChapterSkipRequired': 'Tinh nang nay chi co trong Premium',
   'settingsSaved': 'Da luu cai dat',
   'interstitialAdPlaceholder': 'Vi tri quang cao xen ke ({source})',
   'closeAd': 'Dong quang cao',

@@ -61,6 +61,7 @@ const Map<String, String> swText = {
   'chapterSplitSilenceLabel': 'Gawanya sura wakati ukimya unapofikia muda huu',
   'chapterSkipOn': 'Ruka sura ya {chapter} IMEWASHWA',
   'chapterSkipOff': 'Ruka sura ya {chapter} IMEZIMWA',
+  'premiumChapterSkipRequired': 'Kipengele hiki kinapatikana kwenye Premium tu',
   'settingsSaved': 'Mipangilio imehifadhiwa',
   'interstitialAdPlaceholder': 'Kishika nafasi cha tangazo la katikati ({source})',
   'closeAd': 'Funga tangazo',

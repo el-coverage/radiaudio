@@ -61,6 +61,7 @@ const Map<String, String> zhHantText = {
   'chapterSplitSilenceLabel': '當靜音達到此時長時分割章節',
   'chapterSkipOn': '章節 {chapter} 跳過 開',
   'chapterSkipOff': '章節 {chapter} 跳過 關',
+  'premiumChapterSkipRequired': '此功能僅限進階版使用',
   'settingsSaved': '設定已儲存',
   'interstitialAdPlaceholder': '插頁廣告佔位符（{source}）',
   'closeAd': '關閉廣告',

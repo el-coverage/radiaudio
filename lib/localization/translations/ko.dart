@@ -61,6 +61,7 @@ const Map<String, String> koText = {
   'chapterSplitSilenceLabel': '무음이 이 길이에 도달하면 챕터 분할',
   'chapterSkipOn': '챕터 {chapter} 건너뛰기 켜짐',
   'chapterSkipOff': '챕터 {chapter} 건너뛰기 꺼짐',
+  'premiumChapterSkipRequired': '이 기능은 프리미엄에서만 사용할 수 있습니다',
   'settingsSaved': '설정이 저장되었습니다',
   'interstitialAdPlaceholder': '전면 광고 자리표시자 ({source})',
   'closeAd': '광고 닫기',

@@ -61,6 +61,7 @@ const Map<String, String> arText = {
   'chapterSplitSilenceLabel': 'قسم الفصول عندما يصل الصمت إلى هذه المدة',
   'chapterSkipOn': 'تخطي الفصل {chapter} تشغيل',
   'chapterSkipOff': 'تخطي الفصل {chapter} إيقاف',
+  'premiumChapterSkipRequired': 'هذه الميزة متاحة في بريميوم فقط',
   'settingsSaved': 'تم حفظ الإعدادات',
   'interstitialAdPlaceholder': 'عنصر نائب لإعلان بيني ({source})',
   'closeAd': 'إغلاق الإعلان',

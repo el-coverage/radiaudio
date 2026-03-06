@@ -61,6 +61,7 @@ const Map<String, String> thText = {
   'chapterSplitSilenceLabel': 'แยกบทเมอความเงยบถงระยะเวลาน',
   'chapterSkipOn': 'ขามบท {chapter} เปด',
   'chapterSkipOff': 'ขามบท {chapter} ปด',
+  'premiumChapterSkipRequired': 'ฟีเจอร์นี้ใช้ได้เฉพาะ Premium เท่านั้น',
   'settingsSaved': 'บนทกการตงคาแลว',
   'interstitialAdPlaceholder': 'ตวแทนโฆษณาคนหนา ({source})',
   'closeAd': 'ปดโฆษณา',

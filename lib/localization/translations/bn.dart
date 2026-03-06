@@ -61,6 +61,7 @@ const Map<String, String> bnText = {
   'chapterSplitSilenceLabel': 'নরবত এই সময পছল অধযয ভগ করন',
   'chapterSkipOn': 'অধযয {chapter} সকপ চল',
   'chapterSkipOff': 'অধযয {chapter} সকপ বনধ',
+  'premiumChapterSkipRequired': 'এই ফিচারটি শুধুমাত্র প্রিমিয়ামে উপলব্ধ',
   'settingsSaved': 'সটস সরকষত হযছ',
   'interstitialAdPlaceholder': 'ইনটরসটশযল বজঞপনর পলসহলডর ({source})',
   'closeAd': 'বজঞপন বনধ করন',

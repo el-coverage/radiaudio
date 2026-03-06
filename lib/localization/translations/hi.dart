@@ -61,6 +61,7 @@ const Map<String, String> hiText = {
   'chapterSplitSilenceLabel': 'जब सननट इस अवध तक पहच त अधयय वभजत कर',
   'chapterSkipOn': 'अधयय {chapter} सकप चल',
   'chapterSkipOff': 'अधयय {chapter} सकप बद',
+  'premiumChapterSkipRequired': 'Yeh suvidha sirf Premium mein uplabdh hai',
   'settingsSaved': 'सटगस सहज गई',
   'interstitialAdPlaceholder': 'इटरसटशयल वजञपन पलसहलडर ({source})',
   'closeAd': 'वजञपन बद कर',

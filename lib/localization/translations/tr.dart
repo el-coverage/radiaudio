@@ -61,6 +61,7 @@ const Map<String, String> trText = {
   'chapterSplitSilenceLabel': 'Sessizlik bu sureye ulastiginda bolumleri ayir',
   'chapterSkipOn': 'Bolum {chapter} atlama ACIK',
   'chapterSkipOff': 'Bolum {chapter} atlama KAPALI',
+  'premiumChapterSkipRequired': 'Bu ozellik yalnizca Premium surumde kullanilabilir',
   'settingsSaved': 'Ayarlar kaydedildi',
   'interstitialAdPlaceholder': 'Gecis reklami yer tutucusu ({source})',
   'closeAd': 'Reklami kapat',

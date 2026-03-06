@@ -61,6 +61,7 @@ const Map<String, String> frText = {
   'chapterSplitSilenceLabel': 'Fractionner les chapitres lorsque le silence atteint cette duree',
   'chapterSkipOn': 'Ignorer le chapitre {chapter} ACTIVE',
   'chapterSkipOff': 'Ignorer le chapitre {chapter} DESACTIVE',
+  'premiumChapterSkipRequired': 'Cette fonctionnalite est reservee a Premium',
   'settingsSaved': 'Parametres enregistres',
   'interstitialAdPlaceholder': 'Espace reserve publicitaire interstitiel ({source})',
   'closeAd': 'Fermer la pub',

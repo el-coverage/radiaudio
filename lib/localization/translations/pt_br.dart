@@ -61,6 +61,7 @@ const Map<String, String> ptBrText = {
   'chapterSplitSilenceLabel': 'Dividir capitulos quando o silencio atingir esta duracao',
   'chapterSkipOn': 'Pular capitulo {chapter} LIGADO',
   'chapterSkipOff': 'Pular capitulo {chapter} DESLIGADO',
+  'premiumChapterSkipRequired': 'Este recurso esta disponivel apenas no Premium',
   'settingsSaved': 'Configuracoes salvas',
   'interstitialAdPlaceholder': 'Espaco reservado de anuncio intersticial ({source})',
   'closeAd': 'Fechar anuncio',

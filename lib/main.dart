@@ -409,6 +409,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
       showQuickSnack(_tr('silenceAnalyzing'), milliseconds: 800);
       return;
     }
+    if (!_isPremiumUser) {
+      showQuickSnack(_tr('premiumChapterSkipRequired'), milliseconds: 1200);
+      return;
+    }
 
     final targetSec = _seekSecFromLocalPosition(
       localPosition: localPosition,
@@ -441,6 +445,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _autoSkipIfCurrentChapterIsTarget(double positionSec) async {
+    if (!_isPremiumUser) return;
     if (_isAutoSkippingChapter) return;
     if (!_player.playing) return;
     if (_skipTargetChapters.isEmpty) return;
@@ -1298,6 +1303,65 @@ class _PlayerScreenState extends State<PlayerScreen> {
       }
     }
     return false;
+  }
+
+  /// 1行分のバーから、連続した音楽区間（開始バー/終了バー）を抽出する。
+  List<({int startBar, int endBar})> _collectMusicRunsForRow({
+    required int row,
+    required int barsPerRow,
+    required double secPerBar,
+  }) {
+    final runs = <({int startBar, int endBar})>[];
+    int? runStartBar;
+
+    for (var i = 0; i < barsPerRow; i++) {
+      final flatIndex = (row * barsPerRow) + i;
+      final barCenterSec = (flatIndex + 0.5) * secPerBar;
+      final isMusicAtBar = _isInMusicInterval(barCenterSec);
+      if (isMusicAtBar) {
+        runStartBar ??= i;
+      } else if (runStartBar != null) {
+        runs.add((startBar: runStartBar, endBar: i - 1));
+        runStartBar = null;
+      }
+    }
+
+    if (runStartBar != null) {
+      runs.add((startBar: runStartBar, endBar: barsPerRow - 1));
+    }
+    return runs;
+  }
+
+  /// 音楽区間の幅に応じて、中央に敷き詰める音符テキストを生成する。
+  String _buildMusicNotesText(double maxWidth) {
+    final noteCount = (maxWidth / 12).ceil().clamp(1, 22);
+    return List.generate(
+      noteCount,
+      (index) => index.isEven ? '♪' : '♫',
+    ).join();
+  }
+
+  /// 下部ステータスの中央文言（解析状況 or チャプター位置）を返す。
+  String _buildCenterStatusText({
+    required int currentChapter,
+    required int chapterCount,
+  }) {
+    if (_isPreparingWindowsAnalyzer) {
+      return _tr('silencePreparing');
+    }
+    if (_isAnalyzingSilence) {
+      return _tr('silenceAnalyzing');
+    }
+    if (_isAnalyzingWaveform || _isAnalyzingMusicSegments) {
+      return _tr('voiceMusicAnalyzing');
+    }
+    return _tr(
+      'chapterStatus',
+      {
+        'current': '$currentChapter',
+        'total': '$chapterCount',
+      },
+    );
   }
 
   /// 無音で分割した各区間を解析し、音楽らしい区間を抽出する。
@@ -2337,24 +2401,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   },
                                   child: Column(
                                     children: List.generate(rows, (row) {
-                                      final musicRuns = <List<int>>[];
-                                      int? runStartBar;
-                                      for (int i = 0; i < barsPerRow; i++) {
-                                        final flatIndex = (row * barsPerRow) + i;
-                                        final barCenterSec =
-                                            (flatIndex + 0.5) * secPerBar;
-                                        final isMusicAtBar =
-                                            _isInMusicInterval(barCenterSec);
-                                        if (isMusicAtBar) {
-                                          runStartBar ??= i;
-                                        } else if (runStartBar != null) {
-                                          musicRuns.add([runStartBar, i - 1]);
-                                          runStartBar = null;
-                                        }
-                                      }
-                                      if (runStartBar != null) {
-                                        musicRuns.add([runStartBar, barsPerRow - 1]);
-                                      }
+                                      final musicRuns = _collectMusicRunsForRow(
+                                        row: row,
+                                        barsPerRow: barsPerRow,
+                                        secPerBar: secPerBar,
+                                      );
 
                                       return Expanded(
                                         child: Stack(
@@ -2387,7 +2438,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 final chapterIndex =
                                                     _chapterIndexForSec(barSec);
                                                 final isSkipTarget =
-                                                    _skipTargetChapters
+                                                  _isPremiumUser &&
+                                                  _skipTargetChapters
                                                         .contains(chapterIndex);
                                                 final displayedBarColor =
                                                     isSkipTarget
@@ -2436,8 +2488,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 child: IgnorePointer(
                                                   child: Stack(
                                                     children: musicRuns.map((run) {
-                                                      final startBar = run[0];
-                                                      final endBar = run[1];
+                                                      final startBar = run.startBar;
+                                                      final endBar = run.endBar;
                                                       final runBars =
                                                           (endBar - startBar) + 1;
                                                       final widthFactor =
@@ -2464,23 +2516,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                                     context,
                                                                     runConstraints,
                                                                   ) {
-                                                                    final noteCount =
-                                                                        (runConstraints
-                                                                                .maxWidth /
-                                                                            12)
-                                                                            .ceil()
-                                                                            .clamp(
-                                                                              1,
-                                                                              22,
-                                                                            );
                                                                     final notes =
-                                                                        List.generate(
-                                                                      noteCount,
-                                                                      (index) =>
-                                                                          index.isEven
-                                                                              ? '♪'
-                                                                              : '♫',
-                                                                    ).join();
+                                                                        _buildMusicNotesText(
+                                                                      runConstraints.maxWidth,
+                                                                    );
                                                                     return ClipRect(
                                                                       child: Align(
                                                                         alignment: Alignment
@@ -2658,20 +2697,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     .length +
                                 1)
                             .clamp(1, chapterCount);
-                    final silenceInfo = _isPreparingWindowsAnalyzer
-                        ? _tr('silencePreparing')
-                        : (_isAnalyzingSilence
-                            ? _tr('silenceAnalyzing')
-                        : ((_isAnalyzingWaveform ||
-                            _isAnalyzingMusicSegments)
-                          ? _tr('voiceMusicAnalyzing')
-                                : _tr(
-                                    'chapterStatus',
-                                    {
-                                      'current': '$currentChapter',
-                                      'total': '$chapterCount',
-                                    },
-                                  )));
+                    final silenceInfo = _buildCenterStatusText(
+                      currentChapter: currentChapter,
+                      chapterCount: chapterCount,
+                    );
                     final currentChapterColor = _chapterColorForIndex(
                       currentChapter - 1,
                       true,

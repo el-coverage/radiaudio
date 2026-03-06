@@ -61,6 +61,7 @@ const Map<String, String> itText = {
   'chapterSplitSilenceLabel': 'Dividi i capitoli quando il silenzio raggiunge questa durata',
   'chapterSkipOn': 'Salta capitolo {chapter} ATTIVO',
   'chapterSkipOff': 'Salta capitolo {chapter} DISATTIVO',
+  'premiumChapterSkipRequired': 'Questa funzione e disponibile solo in Premium',
   'settingsSaved': 'Impostazioni salvate',
   'interstitialAdPlaceholder': 'Segnaposto annuncio interstiziale ({source})',
   'closeAd': 'Chiudi annuncio',

@@ -61,6 +61,7 @@ const Map<String, String> faText = {
   'chapterSplitSilenceLabel': 'وقتی سکوت به این مدت برسد فصلها را تقسیم کن',
   'chapterSkipOn': 'پرش فصل {chapter} روشن',
   'chapterSkipOff': 'پرش فصل {chapter} خاموش',
+  'premiumChapterSkipRequired': 'این قابلیت فقط در پریمیوم در دسترس است',
   'settingsSaved': 'تنظیمات ذخیره شد',
   'interstitialAdPlaceholder': 'جاینگهدار تبلیغ بینابینی ({source})',
   'closeAd': 'بستن تبلیغ',

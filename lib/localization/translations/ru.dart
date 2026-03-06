@@ -61,6 +61,7 @@ const Map<String, String> ruText = {
   'chapterSplitSilenceLabel': 'Разделять главы, когда тишина достигает этой длительности',
   'chapterSkipOn': 'Пропуск главы {chapter} ВКЛ',
   'chapterSkipOff': 'Пропуск главы {chapter} ВЫКЛ',
+  'premiumChapterSkipRequired': 'Эта функция доступна только в Премиум',
   'settingsSaved': 'Настройки сохранены',
   'interstitialAdPlaceholder': 'Заглушка межстраничной рекламы ({source})',
   'closeAd': 'Закрыть рекламу',

@@ -12,6 +12,7 @@ const Map<String, String> enText = {
       'Keep the screen awake only while audio is playing',
   'chapterSkipOn': 'Chapter {chapter} skip ON',
   'chapterSkipOff': 'Chapter {chapter} skip OFF',
+  'premiumChapterSkipRequired': 'This feature is available in Premium only',
   'secondsSuffix': '{value}s',
   'cancel': 'Cancel',
   'save': 'Save',

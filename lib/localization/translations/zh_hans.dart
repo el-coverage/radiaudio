@@ -61,6 +61,7 @@ const Map<String, String> zhHansText = {
   'chapterSplitSilenceLabel': '当静音达到此时长时分割章节',
   'chapterSkipOn': '章节 {chapter} 跳过 开',
   'chapterSkipOff': '章节 {chapter} 跳过 关',
+  'premiumChapterSkipRequired': '该功能仅限高级版使用',
   'settingsSaved': '设置已保存',
   'interstitialAdPlaceholder': '插页广告占位符（{source}）',
   'closeAd': '关闭广告',

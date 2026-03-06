@@ -61,6 +61,7 @@ const Map<String, String> esText = {
   'chapterSplitSilenceLabel': 'Dividir capitulos cuando el silencio alcance esta duracion',
   'chapterSkipOn': 'Saltar capitulo {chapter} ACTIVADO',
   'chapterSkipOff': 'Saltar capitulo {chapter} DESACTIVADO',
+  'premiumChapterSkipRequired': 'Esta funcion solo esta disponible en Premium',
   'settingsSaved': 'Configuracion guardada',
   'interstitialAdPlaceholder': 'Marcador de posicion de anuncio intersticial ({source})',
   'closeAd': 'Cerrar anuncio',

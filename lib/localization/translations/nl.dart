@@ -61,6 +61,7 @@ const Map<String, String> nlText = {
   'chapterSplitSilenceLabel': 'Splits hoofdstukken wanneer de stilte deze duur bereikt',
   'chapterSkipOn': 'Hoofdstuk {chapter} overslaan AAN',
   'chapterSkipOff': 'Hoofdstuk {chapter} overslaan UIT',
+  'premiumChapterSkipRequired': 'Deze functie is alleen beschikbaar in Premium',
   'settingsSaved': 'Instellingen opgeslagen',
   'interstitialAdPlaceholder': 'Tijdelijke aanduiding voor interstitial-advertentie ({source})',
   'closeAd': 'Advertentie sluiten',

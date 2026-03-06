@@ -61,6 +61,7 @@ const Map<String, String> tlText = {
   'chapterSplitSilenceLabel': 'Hatiin ang mga kabanata kapag umabot sa tagal na ito ang katahimikan',
   'chapterSkipOn': 'Laktawan ang kabanata {chapter} NAKA-ON',
   'chapterSkipOff': 'Laktawan ang kabanata {chapter} NAKA-OFF',
+  'premiumChapterSkipRequired': 'Available lang ang feature na ito sa Premium',
   'settingsSaved': 'Nai-save ang mga setting',
   'interstitialAdPlaceholder': 'Placeholder ng interstitial ad ({source})',
   'closeAd': 'Isara ang ad',

@@ -61,6 +61,7 @@ const Map<String, String> deText = {
   'chapterSplitSilenceLabel': 'Kapitel teilen, wenn die Stille diese Dauer erreicht',
   'chapterSkipOn': 'Kapitel {chapter} ueberspringen EIN',
   'chapterSkipOff': 'Kapitel {chapter} ueberspringen AUS',
+  'premiumChapterSkipRequired': 'Diese Funktion ist nur in Premium verfuegbar',
   'settingsSaved': 'Einstellungen gespeichert',
   'interstitialAdPlaceholder': 'Interstitial-Werbeplatzhalter ({source})',
   'closeAd': 'Werbung schliessen',

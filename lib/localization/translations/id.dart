@@ -61,6 +61,7 @@ const Map<String, String> idText = {
   'chapterSplitSilenceLabel': 'Bagi bab saat hening mencapai durasi ini',
   'chapterSkipOn': 'Lewati bab {chapter} AKTIF',
   'chapterSkipOff': 'Lewati bab {chapter} NONAKTIF',
+  'premiumChapterSkipRequired': 'Fitur ini hanya tersedia di Premium',
   'settingsSaved': 'Pengaturan disimpan',
   'interstitialAdPlaceholder': 'Placeholder iklan interstisial ({source})',
   'closeAd': 'Tutup iklan',

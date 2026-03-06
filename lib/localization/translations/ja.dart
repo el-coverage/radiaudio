@@ -12,6 +12,7 @@ const Map<String, String> jaText = {
       '再生中のみ画面の自動スリープを防止します',
   'chapterSkipOn': 'チャプター{chapter} スキップON',
   'chapterSkipOff': 'チャプター{chapter} スキップOFF',
+  'premiumChapterSkipRequired': 'この機能はPremium限定です',
   'secondsSuffix': '{value}秒',
   'cancel': 'キャンセル',
   'save': '保存',

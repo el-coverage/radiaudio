@@ -61,6 +61,7 @@ const Map<String, String> urText = {
   'chapterSplitSilenceLabel': 'جب خاموشی اس دورانیے تک پہنچے تو ابواب تقسیم کریں',
   'chapterSkipOn': 'باب {chapter} اسکیپ آن',
   'chapterSkipOff': 'باب {chapter} اسکیپ آف',
+  'premiumChapterSkipRequired': 'Yeh feature sirf Premium mein dastiyab hai',
   'settingsSaved': 'ترتیبات محفوظ ہو گئیں',
   'interstitialAdPlaceholder': 'درمیانی اشتہار کا پلیس ہولڈر ({source})',
   'closeAd': 'اشتہار بند کریں',

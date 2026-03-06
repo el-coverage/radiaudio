@@ -61,6 +61,7 @@ const Map<String, String> plText = {
   'chapterSplitSilenceLabel': 'Podziel rozdzialy, gdy cisza osiagnie ten czas',
   'chapterSkipOn': 'Pomijanie rozdzialu {chapter} WL.',
   'chapterSkipOff': 'Pomijanie rozdzialu {chapter} WYL.',
+  'premiumChapterSkipRequired': 'Ta funkcja jest dostepna tylko w Premium',
   'settingsSaved': 'Ustawienia zapisane',
   'interstitialAdPlaceholder': 'Placeholder reklamy pelnoekranowej ({source})',
   'closeAd': 'Zamknij reklame',
