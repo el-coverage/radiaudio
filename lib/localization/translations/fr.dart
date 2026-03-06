@@ -38,6 +38,7 @@ const Map<String, String> frText = {
   'silencePreparing': 'Preparation de l analyse du silence...',
   'silenceAnalyzing': 'Analyse du silence...',
   'waveformAnalyzing': 'Analyse de la forme d onde...',
+  'voiceMusicAnalyzing': 'Analyse de la voix/musique...',
   'chapterPrevTooltip': 'Chapitre precedent\n(Appui long : piste precedente)',
   'chapterNextTooltip': 'Chapitre suivant\n(Appui long : piste suivante)',
   'playTooltip': 'Appui : Lecture/Pause\nAppui long : Arret',

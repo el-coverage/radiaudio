@@ -38,6 +38,7 @@ const Map<String, String> tlText = {
   'silencePreparing': 'Inihahanda ang silence analysis...',
   'silenceAnalyzing': 'Sinusuri ang katahimikan...',
   'waveformAnalyzing': 'Sinusuri ang waveform...',
+  'voiceMusicAnalyzing': 'Sinusuri ang boses/musika...',
   'chapterPrevTooltip': 'Nakaraang chapter\n(Long press: nakaraang track)',
   'chapterNextTooltip': 'Susunod na chapter\n(Long press: susunod na track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',

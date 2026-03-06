@@ -38,6 +38,7 @@ const Map<String, String> urText = {
   'silencePreparing': 'Preparing silence analysis...',
   'silenceAnalyzing': 'Analyzing silence...',
   'waveformAnalyzing': 'Analyzing waveform...',
+  'voiceMusicAnalyzing': 'Awaaz/mosiqi ka tajziya ho raha hai...',
   'chapterPrevTooltip': 'Previous chapter\n(Long press: previous track)',
   'chapterNextTooltip': 'Next chapter\n(Long press: next track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',

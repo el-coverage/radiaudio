@@ -38,6 +38,7 @@ const Map<String, String> arText = {
   'silencePreparing': 'جار تجهيز تحليل الصمت...',
   'silenceAnalyzing': 'جار تحليل الصمت...',
   'waveformAnalyzing': 'جار تحليل الشكل الموجي...',
+  'voiceMusicAnalyzing': 'جار تحليل الصوت/الموسيقى...',
   'chapterPrevTooltip': 'الفصل السابق\n(ضغط مطول: المقطع السابق)',
   'chapterNextTooltip': 'الفصل التالي\n(ضغط مطول: المقطع التالي)',
   'playTooltip': 'نقرة: تشغيل/ايقاف مؤقت\nضغط مطول: ايقاف',

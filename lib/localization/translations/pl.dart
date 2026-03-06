@@ -38,6 +38,7 @@ const Map<String, String> plText = {
   'silencePreparing': 'Preparing silence analysis...',
   'silenceAnalyzing': 'Analyzing silence...',
   'waveformAnalyzing': 'Analyzing waveform...',
+  'voiceMusicAnalyzing': 'Analiza glosu/muzyki...',
   'chapterPrevTooltip': 'Previous chapter\n(Long press: previous track)',
   'chapterNextTooltip': 'Next chapter\n(Long press: next track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',

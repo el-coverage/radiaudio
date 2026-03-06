@@ -38,6 +38,7 @@ const Map<String, String> swText = {
   'silencePreparing': 'Inaandaa uchanganuzi wa ukimya...',
   'silenceAnalyzing': 'Inachanganua ukimya...',
   'waveformAnalyzing': 'Inachanganua umbo la wimbi...',
+  'voiceMusicAnalyzing': 'Inachanganua sauti/muziki...',
   'chapterPrevTooltip': 'Sura iliyotangulia\n(Bonyeza kwa muda: wimbo uliotangulia)',
   'chapterNextTooltip': 'Sura inayofuata\n(Bonyeza kwa muda: wimbo unaofuata)',
   'playTooltip': 'Gusa: Cheza/Sitisha\nBonyeza kwa muda: Simamisha',

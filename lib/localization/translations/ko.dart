@@ -38,6 +38,7 @@ const Map<String, String> koText = {
   'silencePreparing': '무음 분석 준비 중...',
   'silenceAnalyzing': '무음 분석 중...',
   'waveformAnalyzing': '파형 분석 중...',
+  'voiceMusicAnalyzing': '음성/음악 분석 중...',
   'chapterPrevTooltip': '이전 챕터\n(길게 누르기: 이전 곡)',
   'chapterNextTooltip': '다음 챕터\n(길게 누르기: 다음 곡)',
   'playTooltip': '탭: 재생/일시정지\n길게 누르기: 정지',

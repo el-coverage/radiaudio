@@ -38,6 +38,7 @@ const Map<String, String> deText = {
   'silencePreparing': 'Stille-Analyse wird vorbereitet...',
   'silenceAnalyzing': 'Stille wird analysiert...',
   'waveformAnalyzing': 'Wellenform wird analysiert...',
+  'voiceMusicAnalyzing': 'Stimme/Musik wird analysiert...',
   'chapterPrevTooltip': 'Vorheriges Kapitel\n(Langdruck: vorheriger Titel)',
   'chapterNextTooltip': 'Nachstes Kapitel\n(Langdruck: nachster Titel)',
   'playTooltip': 'Tippen: Wiedergabe/Pause\nLangdruck: Stopp',

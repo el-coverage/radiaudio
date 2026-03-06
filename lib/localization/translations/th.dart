@@ -38,6 +38,7 @@ const Map<String, String> thText = {
   'silencePreparing': 'กำลังเตรียมการวิเคราะห์ความเงียบ...',
   'silenceAnalyzing': 'กำลังวิเคราะห์ความเงียบ...',
   'waveformAnalyzing': 'กำลังวิเคราะห์รูปคลื่น...',
+  'voiceMusicAnalyzing': 'กำลังวิเคราะห์เสียง/เพลง...',
   'chapterPrevTooltip': 'บทก่อนหน้า\n(กดค้าง: เพลงก่อนหน้า)',
   'chapterNextTooltip': 'บทถัดไป\n(กดค้าง: เพลงถัดไป)',
   'playTooltip': 'แตะ: เล่น/พัก\nกดค้าง: หยุด',

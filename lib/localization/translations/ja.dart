@@ -45,6 +45,7 @@ const Map<String, String> jaText = {
   'silencePreparing': '無音解析準備中...',
   'silenceAnalyzing': '無音解析中...',
   'waveformAnalyzing': '波形解析中...',
+  'voiceMusicAnalyzing': '肉声／音声解析中...',
   'chapterPrevTooltip': '前チャプター\n(長押しで前曲)',
   'chapterNextTooltip': '次チャプター\n(長押しで次曲)',
   'playTooltip': 'タップ:再生/一時停止\n長押し:停止',

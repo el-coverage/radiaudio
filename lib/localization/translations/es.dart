@@ -38,6 +38,7 @@ const Map<String, String> esText = {
   'silencePreparing': 'Preparando analisis de silencio...',
   'silenceAnalyzing': 'Analizando silencio...',
   'waveformAnalyzing': 'Analizando forma de onda...',
+  'voiceMusicAnalyzing': 'Analizando voz/musica...',
   'chapterPrevTooltip': 'Capitulo anterior\n(Mantener: pista anterior)',
   'chapterNextTooltip': 'Siguiente capitulo\n(Mantener: siguiente pista)',
   'playTooltip': 'Toque: Reproducir/Pausar\nMantener: Detener',

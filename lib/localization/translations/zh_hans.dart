@@ -38,6 +38,7 @@ const Map<String, String> zhHansText = {
   'silencePreparing': '正在准备静音分析...',
   'silenceAnalyzing': '正在分析静音...',
   'waveformAnalyzing': '正在分析波形...',
+  'voiceMusicAnalyzing': '正在分析人声/音乐...',
   'chapterPrevTooltip': '上一章\n(长按: 上一曲)',
   'chapterNextTooltip': '下一章\n(长按: 下一曲)',
   'playTooltip': '点击: 播放/暂停\n长按: 停止',

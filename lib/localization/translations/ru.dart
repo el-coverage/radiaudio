@@ -38,6 +38,7 @@ const Map<String, String> ruText = {
   'silencePreparing': 'Podgotovka analiza tishiny...',
   'silenceAnalyzing': 'Analiz tishiny...',
   'waveformAnalyzing': 'Analiz volnovoi formy...',
+  'voiceMusicAnalyzing': 'Analiz golosa/muzyki...',
   'chapterPrevTooltip': 'Predydushchaia glava\n(Dolgoe nazhatie: predydushchii trek)',
   'chapterNextTooltip': 'Sleduiushchaia glava\n(Dolgoe nazhatie: sleduiushchii trek)',
   'playTooltip': 'Nazhatie: Vosproizvesti/Pauza\nDolgoe nazhatie: Stop',

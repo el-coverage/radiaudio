@@ -38,6 +38,7 @@ const Map<String, String> viText = {
   'silencePreparing': 'Dang chuan bi phan tich im lang...',
   'silenceAnalyzing': 'Dang phan tich im lang...',
   'waveformAnalyzing': 'Dang phan tich dang song...',
+  'voiceMusicAnalyzing': 'Dang phan tich giong noi/am nhac...',
   'chapterPrevTooltip': 'Chuong truoc\n(Nhan giu: bai truoc)',
   'chapterNextTooltip': 'Chuong tiep theo\n(Nhan giu: bai tiep theo)',
   'playTooltip': 'Cham: Phat/Tam dung\nNhan giu: Dung',

@@ -38,6 +38,7 @@ const Map<String, String> ptBrText = {
   'silencePreparing': 'Preparing silence analysis...',
   'silenceAnalyzing': 'Analyzing silence...',
   'waveformAnalyzing': 'Analyzing waveform...',
+  'voiceMusicAnalyzing': 'Analisando voz/musica...',
   'chapterPrevTooltip': 'Previous chapter\n(Long press: previous track)',
   'chapterNextTooltip': 'Next chapter\n(Long press: next track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',

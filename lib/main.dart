@@ -185,6 +185,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   bool _isPreparingWindowsAnalyzer = false;
   String? _silenceAnalysisPath;
   bool _isAnalyzingWaveform = false;
+  bool _isAnalyzingMusicSegments = false;
   String? _waveformAnalysisPath;
   List<double> _waveformLevels = [];
   final Map<String, List<double>> _waveformCache = {};
@@ -213,7 +214,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return tr(selectedLanguageCode, key, params);
   }
 
-  bool get _usesMockPremiumBilling => _premiumBilling is MockPremiumBillingGateway;
+  bool get _usesMockPremiumBilling =>
+      _premiumBilling is MockPremiumBillingGateway;
 
   PremiumBillingGateway _createPremiumBillingGateway() {
     // TODO: Store product is ready, replace with App Store / Play billing gateway.
@@ -243,14 +245,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
       await _premiumBilling.purchasePremium();
     }
     if (!mounted) return;
-    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'), milliseconds: 1200);
+    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'),
+        milliseconds: 1200);
   }
 
   Future<void> _restorePremiumPurchases() async {
     await _premiumBilling.restorePurchases();
     if (!mounted) return;
     final premium = _premiumBilling.isPremiumListenable.value;
-    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'), milliseconds: 1200);
+    showQuickSnack(_tr(premium ? 'premiumEnabled' : 'premiumDisabled'),
+        milliseconds: 1200);
   }
 
   /// 無音自動チャプター解析が利用可能なプラットフォームかを返す。
@@ -384,9 +388,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (filePath == null) return;
     final prefs = await SharedPreferences.getInstance();
     final key = _skipTargetStorageKey(filePath);
-    final values = _skipTargetChapters
-        .toList(growable: false)
-      ..sort();
+    final values = _skipTargetChapters.toList(growable: false)..sort();
     await prefs.setStringList(
       key,
       values.map((value) => value.toString()).toList(growable: false),
@@ -448,8 +450,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (!_skipTargetChapters.contains(currentChapter)) return;
 
     var targetChapter = currentChapter + 1;
-    while (
-        targetChapter < chapterCount && _skipTargetChapters.contains(targetChapter)) {
+    while (targetChapter < chapterCount &&
+        _skipTargetChapters.contains(targetChapter)) {
       targetChapter++;
     }
     if (targetChapter >= chapterCount) {
@@ -522,7 +524,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
     final loadedPremium = prefs.getBool(_prefIsPremiumUser) ?? false;
     final loadedPreventAutoSleep =
-      prefs.getBool(_prefPreventAutoSleepDuringPlayback) ?? false;
+        prefs.getBool(_prefPreventAutoSleepDuringPlayback) ?? false;
     final loadedAdsDisabledUntilIso = prefs.getString(_prefAdsDisabledUntilIso);
     final loadedAdsDisabledUntil = loadedAdsDisabledUntilIso == null
         ? null
@@ -879,7 +881,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   /// 保持しているリソースを解放する。
   void dispose() {
     if (_premiumStateListener != null) {
-      _premiumBilling.isPremiumListenable.removeListener(_premiumStateListener!);
+      _premiumBilling.isPremiumListenable
+          .removeListener(_premiumStateListener!);
     }
     unawaited(_premiumBilling.dispose());
     unawaited(WakelockPlus.disable());
@@ -1301,8 +1304,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _analyzeMusicSegmentsForSeekbar({
     required String audioPath,
   }) async {
+    if (!mounted) return;
+    setState(() {
+      _isAnalyzingMusicSegments = true;
+    });
+
     final pcmBytes = await _decodeToPcmMono8000(audioPath);
-    if (pcmBytes == null || pcmBytes.isEmpty) return;
+    if (pcmBytes == null || pcmBytes.isEmpty) {
+      if (!mounted) return;
+      if (_silenceAnalysisPath != audioPath) return;
+      setState(() {
+        _isAnalyzingMusicSegments = false;
+      });
+      return;
+    }
     if (!mounted) return;
     if (_silenceAnalysisPath != audioPath) return;
 
@@ -1314,6 +1329,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (_silenceAnalysisPath != audioPath) return;
     setState(() {
       _musicIntervals = musicIntervals;
+      _isAnalyzingMusicSegments = false;
     });
   }
 
@@ -1415,7 +1431,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       final durationSec = endSec - startSec;
       if (durationSec < 2.0) break;
 
-      final startSample = (startSec * sampleRate).floor().clamp(0, totalSamples);
+      final startSample =
+          (startSec * sampleRate).floor().clamp(0, totalSamples);
       final endSample = (endSec * sampleRate).floor().clamp(0, totalSamples);
       if (endSample - startSample < (sampleRate * 2).floor()) {
         startSec += _musicHopSec;
@@ -1443,7 +1460,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
         if (currentStart != null && currentEnd != null) {
           final len = currentEnd - currentStart;
           if (len >= _musicMinIntervalSec) {
-            merged.add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
+            merged.add(
+                _MusicInterval(startSec: currentStart, endSec: currentEnd));
           }
         }
         currentStart = null;
@@ -1462,7 +1480,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       } else {
         final len = currentEnd - currentStart;
         if (len >= _musicMinIntervalSec) {
-          merged.add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
+          merged
+              .add(_MusicInterval(startSec: currentStart, endSec: currentEnd));
         }
         currentStart = w.start;
         currentEnd = w.end;
@@ -2155,7 +2174,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
         alignment: Alignment.center,
         child: Text(
           _tr('bannerAdPlaceholder'),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -2165,8 +2185,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   /// プレイヤー画面全体のUIを構築する。
   Widget build(BuildContext context) {
-    final displayTitle =
-        currentFilePath == null ? _tr('selectAudioFileFromFolderPrompt') : currentTitle;
+    final displayTitle = currentFilePath == null
+        ? _tr('selectAudioFileFromFolderPrompt')
+        : currentTitle;
     return Scaffold(
       bottomNavigationBar: _isAdFree ? null : _buildAdBannerPlaceholder(),
       body: SafeArea(
@@ -2316,6 +2337,25 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   },
                                   child: Column(
                                     children: List.generate(rows, (row) {
+                                      final musicRuns = <List<int>>[];
+                                      int? runStartBar;
+                                      for (int i = 0; i < barsPerRow; i++) {
+                                        final flatIndex = (row * barsPerRow) + i;
+                                        final barCenterSec =
+                                            (flatIndex + 0.5) * secPerBar;
+                                        final isMusicAtBar =
+                                            _isInMusicInterval(barCenterSec);
+                                        if (isMusicAtBar) {
+                                          runStartBar ??= i;
+                                        } else if (runStartBar != null) {
+                                          musicRuns.add([runStartBar, i - 1]);
+                                          runStartBar = null;
+                                        }
+                                      }
+                                      if (runStartBar != null) {
+                                        musicRuns.add([runStartBar, barsPerRow - 1]);
+                                      }
+
                                       return Expanded(
                                         child: Stack(
                                           children: [
@@ -2331,8 +2371,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 );
                                                 final barSec =
                                                     (flatIndex + 1) * secPerBar;
-                                                final isMusicBar =
-                                                    _isInMusicInterval(barSec);
                                                 final double renderedHeight =
                                                     hasWaveform
                                                         ? (waveformLevel >= 0
@@ -2340,16 +2378,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                                 (waveformLevel *
                                                                     41.0)
                                                             : 0.0)
-                                                    : (currentFilePath == null
-                                                      ? 45.0
-                                                      : 3.0);
+                                                        : (currentFilePath ==
+                                                                null
+                                                            ? 45.0
+                                                            : 3.0);
                                                 final isPlayed =
                                                     barSec <= seekProgressSec;
                                                 final chapterIndex =
-                                                  _chapterIndexForSec(barSec);
+                                                    _chapterIndexForSec(barSec);
                                                 final isSkipTarget =
-                                                  _skipTargetChapters.contains(
-                                                    chapterIndex);
+                                                    _skipTargetChapters
+                                                        .contains(chapterIndex);
                                                 final displayedBarColor =
                                                     isSkipTarget
                                                         ? Colors.black
@@ -2359,7 +2398,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                                     chapterIndex,
                                                                     true,
                                                                   )
-                                                                : Colors.blueGrey
+                                                                : Colors
+                                                                    .blueGrey
                                                                     .shade300)
                                                             : _chapterColorForIndex(
                                                                 chapterIndex,
@@ -2376,27 +2416,139 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                       fit: StackFit.expand,
                                                       children: [
                                                         Align(
-                                                          alignment: Alignment.bottomCenter,
+                                                          alignment: Alignment
+                                                              .bottomCenter,
                                                           child: Container(
-                                                            height: renderedHeight,
-                                                            color: displayedBarColor,
+                                                            height:
+                                                                renderedHeight,
+                                                            color:
+                                                                displayedBarColor,
                                                           ),
                                                         ),
-                                                        if (isMusicBar && renderedHeight > 0)
-                                                          Align(
-                                                            alignment: Alignment.center,
-                                                            child: Container(
-                                                              width: double.infinity,
-                                                              height: 5.0,
-                                                              color: Colors.black,
-                                                            ),
-                                                          ),
                                                       ],
                                                     ),
                                                   ),
                                                 );
                                               }),
                                             ),
+                                            if (musicRuns.isNotEmpty)
+                                              Positioned.fill(
+                                                child: IgnorePointer(
+                                                  child: Stack(
+                                                    children: musicRuns.map((run) {
+                                                      final startBar = run[0];
+                                                      final endBar = run[1];
+                                                      final runBars =
+                                                          (endBar - startBar) + 1;
+                                                      final widthFactor =
+                                                          runBars / barsPerRow;
+                                                      final centerFactor =
+                                                          (startBar + (runBars / 2)) /
+                                                              barsPerRow;
+                                                      final alignX =
+                                                          (centerFactor * 2) - 1;
+
+                                                      return Align(
+                                                        alignment: Alignment(
+                                                          alignX,
+                                                          0,
+                                                        ),
+                                                        child: FractionallySizedBox(
+                                                          widthFactor: widthFactor,
+                                                          child: Stack(
+                                                            fit: StackFit.expand,
+                                                            children: [
+                                                              Center(
+                                                                child: LayoutBuilder(
+                                                                  builder: (
+                                                                    context,
+                                                                    runConstraints,
+                                                                  ) {
+                                                                    final noteCount =
+                                                                        (runConstraints
+                                                                                .maxWidth /
+                                                                            12)
+                                                                            .ceil()
+                                                                            .clamp(
+                                                                              1,
+                                                                              22,
+                                                                            );
+                                                                    final notes =
+                                                                        List.generate(
+                                                                      noteCount,
+                                                                      (index) =>
+                                                                          index.isEven
+                                                                              ? '♪'
+                                                                              : '♫',
+                                                                    ).join();
+                                                                    return ClipRect(
+                                                                      child: Align(
+                                                                        alignment: Alignment
+                                                                            .centerLeft,
+                                                                        child: Text(
+                                                                          notes,
+                                                                          maxLines: 1,
+                                                                          overflow:
+                                                                              TextOverflow
+                                                                                  .clip,
+                                                                          softWrap: false,
+                                                                          style:
+                                                                              const TextStyle(
+                                                                            fontSize: 11,
+                                                                            height: 1.0,
+                                                                            letterSpacing:
+                                                                                -0.35,
+                                                                            color: Colors
+                                                                                .black,
+                                                                            fontWeight:
+                                                                                FontWeight
+                                                                                    .w900,
+                                                                            shadows: [
+                                                                              Shadow(
+                                                                                color: Colors
+                                                                                    .black54,
+                                                                                blurRadius:
+                                                                                    2,
+                                                                                offset:
+                                                                                    Offset(
+                                                                                  0,
+                                                                                  1,
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                              Positioned(
+                                                                left: 0,
+                                                                top: 0,
+                                                                bottom: 0,
+                                                                child: Container(
+                                                                  width: 2,
+                                                                  color: Colors.white70,
+                                                                ),
+                                                              ),
+                                                              Positioned(
+                                                                right: 0,
+                                                                top: 0,
+                                                                bottom: 0,
+                                                                child: Container(
+                                                                  width: 2,
+                                                                  color: Colors.white70,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }).toList(growable: false),
+                                                  ),
+                                                ),
+                                              ),
                                             if (!hasWaveform)
                                               Positioned(
                                                 left: 0,
@@ -2510,8 +2662,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         ? _tr('silencePreparing')
                         : (_isAnalyzingSilence
                             ? _tr('silenceAnalyzing')
-                            : (_isAnalyzingWaveform
-                                ? _tr('waveformAnalyzing')
+                        : ((_isAnalyzingWaveform ||
+                            _isAnalyzingMusicSegments)
+                          ? _tr('voiceMusicAnalyzing')
                                 : _tr(
                                     'chapterStatus',
                                     {
