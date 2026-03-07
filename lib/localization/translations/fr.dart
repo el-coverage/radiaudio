@@ -1,4 +1,8 @@
 const Map<String, String> frText = {
+  'premiumOnlySkipTarget': 'Cette fonctionnalité est réservée aux utilisateurs Premium',
+  'musicDetectionTitle': 'Détection de musique',
+  'musicDetectionSubtitle': 'Détecte automatiquement les sections musicales (affichées dans l’interface)',
+  'musicDetectionPremiumOnly': 'Cette fonctionnalité est réservée aux utilisateurs Premium',
   'settings': 'Parametres',
   'language': 'Langue',
   'defaultFolder': 'Dossier par defaut',
@@ -38,7 +42,7 @@ const Map<String, String> frText = {
   'silencePreparing': 'Preparation de l analyse du silence...',
   'silenceAnalyzing': 'Analyse du silence...',
   'waveformAnalyzing': 'Analyse de la forme d onde...',
-  'voiceMusicAnalyzing': 'Analyse de la voix/musique...',
+  'voiceMusicAnalyzing': 'Analyse de la musique...',
   'chapterPrevTooltip': 'Chapitre precedent\n(Appui long : piste precedente)',
   'chapterNextTooltip': 'Chapitre suivant\n(Appui long : piste suivante)',
   'playTooltip': 'Appui : Lecture/Pause\nAppui long : Arret',
@@ -67,5 +71,4 @@ const Map<String, String> frText = {
   'closeAd': 'Fermer la pub',
   'adLabel': 'Pub',
   'bannerAdPlaceholder': 'Espace reserve de banniere publicitaire',
-  'fileIndexInFolder': 'Dans le dossier {current}/{total}',
 };

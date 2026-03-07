@@ -1,4 +1,8 @@
 const Map<String, String> esText = {
+  'premiumOnlySkipTarget': 'Esta función está disponible solo en Premium',
+  'musicDetectionTitle': 'Detección de música',
+  'musicDetectionSubtitle': 'Detecta automáticamente las secciones de música (se muestra en la interfaz de reproducción)',
+  'musicDetectionPremiumOnly': 'Esta función está disponible solo en Premium',
   'settings': 'Configuracion',
   'language': 'Idioma',
   'defaultFolder': 'Carpeta predeterminada',
@@ -38,7 +42,7 @@ const Map<String, String> esText = {
   'silencePreparing': 'Preparando analisis de silencio...',
   'silenceAnalyzing': 'Analizando silencio...',
   'waveformAnalyzing': 'Analizando forma de onda...',
-  'voiceMusicAnalyzing': 'Analizando voz/musica...',
+  'voiceMusicAnalyzing': 'Analizando música...',
   'chapterPrevTooltip': 'Capitulo anterior\n(Mantener: pista anterior)',
   'chapterNextTooltip': 'Siguiente capitulo\n(Mantener: siguiente pista)',
   'playTooltip': 'Toque: Reproducir/Pausar\nMantener: Detener',
@@ -67,5 +71,4 @@ const Map<String, String> esText = {
   'closeAd': 'Cerrar anuncio',
   'adLabel': 'Anuncio',
   'bannerAdPlaceholder': 'Marcador de posicion de anuncio de banner',
-  'fileIndexInFolder': 'En la carpeta {current}/{total}',
 };

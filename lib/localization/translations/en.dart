@@ -1,4 +1,8 @@
 const Map<String, String> enText = {
+  'premiumOnlySkipTarget': 'This feature is available in Premium only',
+  'musicDetectionTitle': 'Music Detection',
+  'musicDetectionSubtitle': 'Automatically detects music sections (shown in playback UI)',
+  'musicDetectionPremiumOnly': 'This feature is available in Premium only',
   'settings': 'Settings',
   'language': 'Language',
   'defaultFolder': 'Default Folder',
@@ -46,7 +50,7 @@ const Map<String, String> enText = {
   'silencePreparing': 'Preparing silence analysis...',
   'silenceAnalyzing': 'Analyzing silence...',
   'waveformAnalyzing': 'Analyzing waveform...',
-  'voiceMusicAnalyzing': 'Analyzing voice/music...',
+  'voiceMusicAnalyzing': 'Analyzing music...',
   'chapterPrevTooltip': 'Previous chapter\n(Long press: previous track)',
   'chapterNextTooltip': 'Next chapter\n(Long press: next track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',
@@ -67,5 +71,4 @@ const Map<String, String> enText = {
   'watchRewardAdLabel': 'Watch reward ad (simulate) -> 24h no ads',
   'adLabel': 'Ad',
   'bannerAdPlaceholder': 'Banner ad placeholder',
-  'fileIndexInFolder': 'In folder {current}/{total}',
 };

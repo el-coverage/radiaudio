@@ -1,4 +1,8 @@
 const Map<String, String> itText = {
+  'premiumOnlySkipTarget': 'Questa funzione è disponibile solo per utenti Premium',
+  'musicDetectionTitle': 'Rilevamento musicale',
+  'musicDetectionSubtitle': 'Rileva automaticamente le sezioni musicali (mostrato nell’interfaccia di riproduzione)',
+  'musicDetectionPremiumOnly': 'Questa funzione è disponibile solo per utenti Premium',
   'settings': 'Impostazioni',
   'language': 'Lingua',
   'defaultFolder': 'Cartella predefinita',
@@ -38,7 +42,7 @@ const Map<String, String> itText = {
   'silencePreparing': 'Preparing silence analysis...',
   'silenceAnalyzing': 'Analyzing silence...',
   'waveformAnalyzing': 'Analyzing waveform...',
-  'voiceMusicAnalyzing': 'Analisi voce/musica...',
+  'voiceMusicAnalyzing': 'Analisi musica...',
   'chapterPrevTooltip': 'Previous chapter\n(Long press: previous track)',
   'chapterNextTooltip': 'Next chapter\n(Long press: next track)',
   'playTooltip': 'Tap: Play/Pause\nLong press: Stop',
@@ -67,5 +71,4 @@ const Map<String, String> itText = {
   'closeAd': 'Chiudi annuncio',
   'adLabel': 'Annuncio',
   'bannerAdPlaceholder': 'Segnaposto annuncio banner',
-  'fileIndexInFolder': 'Nella cartella {current}/{total}',
 };

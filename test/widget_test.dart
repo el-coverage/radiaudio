@@ -18,6 +18,5 @@ void main() {
     expect(find.byType(PlayerScreen), findsOneWidget);
     expect(find.byIcon(Icons.settings), findsOneWidget);
     expect(find.text('1.00x'), findsOneWidget);
-    expect(find.textContaining('1/10'), findsOneWidget);
   });
 }

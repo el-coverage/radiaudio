@@ -1,4 +1,8 @@
 const Map<String, String> deText = {
+  'premiumOnlySkipTarget': 'Diese Funktion ist nur in Premium verfügbar',
+  'musicDetectionTitle': 'Musikerkennung',
+  'musicDetectionSubtitle': 'Erkennt Musikabschnitte automatisch (im Wiedergabe-UI angezeigt)',
+  'musicDetectionPremiumOnly': 'Diese Funktion ist nur in Premium verfügbar',
   'settings': 'Einstellungen',
   'language': 'Sprache',
   'defaultFolder': 'Standardordner',
@@ -38,7 +42,7 @@ const Map<String, String> deText = {
   'silencePreparing': 'Stille-Analyse wird vorbereitet...',
   'silenceAnalyzing': 'Stille wird analysiert...',
   'waveformAnalyzing': 'Wellenform wird analysiert...',
-  'voiceMusicAnalyzing': 'Stimme/Musik wird analysiert...',
+  'voiceMusicAnalyzing': 'Musik wird analysiert...',
   'chapterPrevTooltip': 'Vorheriges Kapitel\n(Langdruck: vorheriger Titel)',
   'chapterNextTooltip': 'Nachstes Kapitel\n(Langdruck: nachster Titel)',
   'playTooltip': 'Tippen: Wiedergabe/Pause\nLangdruck: Stopp',
@@ -67,5 +71,4 @@ const Map<String, String> deText = {
   'closeAd': 'Werbung schliessen',
   'adLabel': 'Anzeige',
   'bannerAdPlaceholder': 'Banner-Werbeplatzhalter',
-  'fileIndexInFolder': 'Im Ordner {current}/{total}',
 };

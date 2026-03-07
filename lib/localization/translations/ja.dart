@@ -1,4 +1,8 @@
 const Map<String, String> jaText = {
+  'premiumOnlySkipTarget': 'この機能はプレミアム限定です',
+  'musicDetectionTitle': '音楽検知',
+  'musicDetectionSubtitle': '音楽区間を自動で検出します（再生UIに反映）',
+  'musicDetectionPremiumOnly': 'この機能はプレミアム限定です',
   'settings': '設定',
   'language': '言語',
   'defaultFolder': 'デフォルトフォルダ',
@@ -8,8 +12,7 @@ const Map<String, String> jaText = {
   'chapterUnitSeconds': 'チャプター単位秒数',
   'chapterSplitSilenceLabel': 'この秒数の無音でチャプターを分割',
   'preventAutoSleepDuringPlaybackTitle': '再生時の自動スリープ防止',
-  'preventAutoSleepDuringPlaybackSubtitle':
-      '再生中のみ画面の自動スリープを防止します',
+  'preventAutoSleepDuringPlaybackSubtitle': '再生中のみ画面の自動スリープを防止します',
   'chapterSkipOn': 'チャプター{chapter} スキップON',
   'chapterSkipOff': 'チャプター{chapter} スキップOFF',
   'premiumChapterSkipRequired': 'この機能はPremium限定です',
@@ -19,8 +22,7 @@ const Map<String, String> jaText = {
   'settingsSaved': '設定を保存しました',
   'closeSettings': '設定を閉じる',
   'pleaseOpenAudioFirst': '先に音声ファイルを開いてください',
-  'selectAudioFileFromFolderPrompt':
-      '右下のフォルダボタンから音声ファイルを選択してください。',
+  'selectAudioFileFromFolderPrompt': '右下のフォルダボタンから音声ファイルを選択してください。',
   'pleaseSelectAudioFile': '音声ファイルを選択してください',
   'silenceChapterNotDetected': '無音チャプターが未検出です',
   'lastChapter': '最後のチャプターです',
@@ -46,7 +48,7 @@ const Map<String, String> jaText = {
   'silencePreparing': '無音解析準備中...',
   'silenceAnalyzing': '無音解析中...',
   'waveformAnalyzing': '波形解析中...',
-  'voiceMusicAnalyzing': '肉声／音声解析中...',
+  'voiceMusicAnalyzing': '音楽解析中...',
   'chapterPrevTooltip': '前チャプター\n(長押しで前曲)',
   'chapterNextTooltip': '次チャプター\n(長押しで次曲)',
   'playTooltip': 'タップ:再生/一時停止\n長押し:停止',
@@ -67,5 +69,4 @@ const Map<String, String> jaText = {
   'watchRewardAdLabel': '報酬広告を見る（シミュレーション）→ 24時間広告なし',
   'adLabel': '広告',
   'bannerAdPlaceholder': 'バナー広告（ダミー）',
-  'fileIndexInFolder': 'フォルダ内 {current}/{total}',
 };
